@@ -1,0 +1,271 @@
+{% extends "base/dashboard.html" %}
+
+{% block title %}Kelola User - {{ site_settings.site_name or 'Portal Desa Digital' }}{% endblock %}
+
+{% block sidebar %}
+<ul class="nav flex-column">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+            <i class="bi bi-speedometer2"></i>
+            Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="{{ url_for('admin.users') }}">
+            <i class="bi bi-people"></i>
+            Kelola User
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.content_list') }}">
+            <i class="bi bi-file-earmark-text"></i>
+            Kelola Konten
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.categories') }}">
+            <i class="bi bi-tags"></i>
+            Kategori
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.settings') }}">
+            <i class="bi bi-gear"></i>
+            Pengaturan
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.audit_logs') }}">
+            <i class="bi bi-clock-history"></i>
+            Log Audit
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block page_title %}Kelola User{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('admin.create_user') }}" class="btn btn-primary">
+    <i class="bi bi-person-plus me-1"></i>
+    Tambah User
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="search" value="{{ search }}" placeholder="Cari user...">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="role">
+                    <option value="">Semua Role</option>
+                    {% for role in roles %}
+                    <option value="{{ role.name }}" {% if role_filter == role.name %}selected{% endif %}>
+                        {{ role.name.title() }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-search"></i> Cari
+                </button>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">Daftar User</h6>
+    </div>
+    <div class="card-body">
+        {% if users.items %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Username</th>
+                        <th>Nama Lengkap</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Terdaftar</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users.items %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.full_name or '-' }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ user.role.name.title() }}</span>
+                        </td>
+                        <td>
+                            {% if user.status == 'active' %}
+                                <span class="badge bg-success">Aktif</span>
+                            {% elif user.status == 'inactive' %}
+                                <span class="badge bg-secondary">Tidak Aktif</span>
+                            {% elif user.status == 'suspended' %}
+                                <span class="badge bg-danger">Suspended</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ user.status.title() }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.created_at.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{{ url_for('admin.edit_user', id=user.id) }}" 
+                                   class="btn btn-outline-primary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if user.id != current_user.id %}
+                                <button type="button" class="btn btn-outline-danger" 
+                                        onclick="confirmDelete('{{ user.username|replace("'", "\\'") }}', {{ user.id }})"
+                                        title="Hapus">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if users.pages > 1 %}
+        <nav aria-label="User pagination">
+            <ul class="pagination justify-content-center">
+                {% if users.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.users', page=users.prev_num, search=search, role=role_filter) }}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for page_num in users.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != users.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin.users', page=page_num, search=search, role=role_filter) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if users.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.users', page=users.next_num, search=search, role=role_filter) }}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-4">
+            <i class="bi bi-people display-1 text-muted"></i>
+            <p class="text-muted mt-3">Tidak ada user yang ditemukan.</p>
+            <a href="{{ url_for('admin.create_user') }}" class="btn btn-primary">
+                <i class="bi bi-person-plus me-1"></i>
+                Tambah User Pertama
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Konfirmasi Hapus</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Apakah Anda yakin ingin menghapus user <strong id="deleteUserName"></strong>?</p>
+                <p class="text-danger"><small>Tindakan ini tidak dapat dibatalkan.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-danger" onclick="deleteUser()">Hapus</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let deleteUserId = null;
+
+function confirmDelete(username, userId) {
+    deleteUserId = userId;
+    document.getElementById('deleteUserName').textContent = username;
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+}
+
+function deleteUser() {
+    if (!deleteUserId) return;
+    
+    // Show loading state
+    const deleteBtn = document.querySelector('#deleteModal .btn-danger');
+    const originalText = deleteBtn.textContent;
+    deleteBtn.textContent = 'Menghapus...';
+    deleteBtn.disabled = true;
+    
+    // Send POST request to delete user
+    fetch(`{{ url_for('admin.delete_user', id=0) }}`.replace('0', deleteUserId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            // Reload page to show updated list
+            window.location.reload();
+        } else {
+            return response.json().then(data => {
+                throw new Error(data.message || 'Gagal menghapus user');
+            });
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error.message);
+        // Reset button state
+        deleteBtn.textContent = originalText;
+        deleteBtn.disabled = false;
+    });
+}
+</script>
+{% endblock %}

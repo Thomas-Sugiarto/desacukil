@@ -1,0 +1,425 @@
+{% extends "base/dashboard.html" %}
+{% from "components/alerts.html" import render_flash_messages, status_badge %}
+{% from "components/breadcrumb.html" import editor_breadcrumb %}
+{% from "components/pagination.html" import render_pagination %}
+
+{% block title %}Antrian Review - Editor - {{ site_settings.site_name }}{% endblock %}
+
+{% block breadcrumb %}
+    {{ editor_breadcrumb('Antrian Review') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Flash Messages -->
+    {{ render_flash_messages() }}
+    
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Antrian Review</h2>
+            <p class="text-muted mb-0">Konten yang menunggu untuk direview dan disetujui</p>
+        </div>
+        <div>
+            <a href="{{ url_for('editor.dashboard') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Kembali ke Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-warning bg-opacity-10 rounded-circle p-3 mx-auto mb-2" style="width: 60px; height: 60px;">
+                        <i class="bi bi-clock text-warning fs-4"></i>
+                    </div>
+                    <h4 class="mb-1">{{ content.total }}</h4>
+                    <small class="text-muted">Total Menunggu Review</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-info bg-opacity-10 rounded-circle p-3 mx-auto mb-2" style="width: 60px; height: 60px;">
+                        <i class="bi bi-calendar-day text-info fs-4"></i>
+                    </div>
+                    <h4 class="mb-1">{{ today_count or 0 }}</h4>
+                    <small class="text-muted">Hari Ini</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-danger bg-opacity-10 rounded-circle p-3 mx-auto mb-2" style="width: 60px; height: 60px;">
+                        <i class="bi bi-exclamation-triangle text-danger fs-4"></i>
+                    </div>
+                    <h4 class="mb-1">{{ old_count or 0 }}</h4>
+                    <small class="text-muted">Lebih dari 3 Hari</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-success bg-opacity-10 rounded-circle p-3 mx-auto mb-2" style="width: 60px; height: 60px;">
+                        <i class="bi bi-people text-success fs-4"></i>
+                    </div>
+                    <h4 class="mb-1">{{ authors|length }}</h4>
+                    <small class="text-muted">Penulis Aktif</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Kategori</label>
+                    <select class="form-select" name="category">
+                        <option value="">Semua Kategori</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}" {{ 'selected' if category_filter|int == category.id }}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Penulis</label>
+                    <select class="form-select" name="author">
+                        <option value="">Semua Penulis</option>
+                        {% for author in authors %}
+                            <option value="{{ author.id }}" {{ 'selected' if author_filter|int == author.id }}>
+                                {{ author.full_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Urutkan</label>
+                    <select class="form-select" name="sort">
+                        <option value="oldest" {{ 'selected' if sort == 'oldest' }}>Terlama (Prioritas)</option>
+                        <option value="newest" {{ 'selected' if sort == 'newest' }}>Terbaru</option>
+                        <option value="title" {{ 'selected' if sort == 'title' }}>Judul A-Z</option>
+                        <option value="author" {{ 'selected' if sort == 'author' }}>Penulis A-Z</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search me-1"></i>Filter
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Review Queue List -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-list-check text-warning me-2"></i>
+                    Konten Menunggu Review ({{ content.total }} konten)
+                </h5>
+                {% if content.items %}
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-success btn-sm" onclick="bulkApprove()">
+                            <i class="bi bi-check-circle me-1"></i>Setujui Terpilih
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="bulkReject()">
+                            <i class="bi bi-x-circle me-1"></i>Tolak Terpilih
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if content.items %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="5%">
+                                    <input type="checkbox" class="form-check-input" id="select-all">
+                                </th>
+                                <th width="40%">Konten</th>
+                                <th width="15%">Penulis</th>
+                                <th width="10%">Kategori</th>
+                                <th width="10%">Tanggal Kirim</th>
+                                <th width="10%">Durasi Tunggu</th>
+                                <th width="10%">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in content.items %}
+                            <tr class="review-item" data-id="{{ item.id }}">
+                                <td>
+                                    <input type="checkbox" class="form-check-input content-checkbox" value="{{ item.id }}">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0 me-3">
+                                            {% if item.cover_image %}
+                                                <img src="{{ url_for('static', filename='uploads/' + item.cover_image) }}" 
+                                                     class="rounded" width="60" height="45" style="object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                                     style="width: 60px; height: 45px;">
+                                                    <i class="bi bi-file-earmark-text text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                <a href="{{ url_for('editor.content_review', id=item.id) }}" 
+                                                   class="text-decoration-none">
+                                                    {{ item.title }}
+                                                </a>
+                                            </h6>
+                                            <p class="text-muted mb-1 small">{{ item.excerpt|truncate(80) }}</p>
+                                            <div class="d-flex align-items-center small text-muted">
+                                                {% if item.youtube_url %}
+                                                    <i class="bi bi-play-circle me-1 text-primary"></i>
+                                                    <span class="me-2">Video</span>
+                                                {% endif %}
+                                                <i class="bi bi-file-text me-1"></i>
+                                                <span>{{ item.content|striptags|length }} karakter</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ url_for('static', filename='images/default-avatar.png') }}" 
+                                             class="rounded-circle me-2" width="32" height="32">
+                                        <div>
+                                            <div class="fw-medium">{{ item.author.full_name }}</div>
+                                            <small class="text-muted">{{ item.author.role.name.title() }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if item.category %}
+                                        <span class="badge" style="background-color: {{ item.category.color }};">
+                                            {{ item.category.name }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="small">
+                                        <div>{{ item.created_at.strftime('%d/%m/%Y') }}</div>
+                                        <div class="text-muted">{{ item.created_at.strftime('%H:%M') }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% set days_waiting = (moment().date() - item.created_at.date()).days %}
+                                    <span class="badge bg-{% if days_waiting >= 3 %}danger{% elif days_waiting >= 1 %}warning{% else %}success{% endif %}">
+                                        {% if days_waiting == 0 %}
+                                            Hari ini
+                                        {% elif days_waiting == 1 %}
+                                            1 hari
+                                        {% else %}
+                                            {{ days_waiting }} hari
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('editor.content_review', id=item.id) }}" 
+                                           class="btn btn-primary" title="Review">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-check-circle display-1 text-success mb-3"></i>
+                    <h5 class="text-muted">Tidak ada konten yang menunggu review</h5>
+                    <p class="text-muted">Semua konten sudah direview atau belum ada konten yang dikirim untuk review</p>
+                    <a href="{{ url_for('editor.content_list') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-list me-1"></i>Lihat Semua Konten
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if content.pages > 1 %}
+        <div class="mt-4">
+            {{ render_pagination(content, 'editor.review_queue', 
+                                category=category_filter,
+                                author=author_filter,
+                                sort=sort) }}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Bulk Review Modal -->
+<div class="modal fade" id="bulkReviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkReviewTitle">Bulk Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="bulkReviewForm">
+                    <div class="mb-3">
+                        <label class="form-label">Aksi</label>
+                        <select class="form-select" id="bulkAction" required>
+                            <option value="">Pilih Aksi</option>
+                            <option value="approve">Setujui Semua</option>
+                            <option value="reject">Tolak Semua</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="commentSection" style="display: none;">
+                        <label class="form-label">Komentar (untuk penolakan)</label>
+                        <textarea class="form-control" id="bulkComment" rows="3" 
+                                  placeholder="Berikan alasan penolakan..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <span id="selectedCount">0</span> konten akan diproses
+                        </small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" onclick="processBulkReview()">Proses</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Select all functionality
+    $('#select-all').on('change', function() {
+        $('.content-checkbox').prop('checked', $(this).is(':checked'));
+    });
+    
+    // Auto-refresh every 60 seconds
+    setInterval(function() {
+        if (!$('.modal').hasClass('show')) {
+            location.reload();
+        }
+    }, 60000);
+});
+
+function bulkApprove() {
+    const selectedIds = getSelectedIds();
+    if (selectedIds.length === 0) {
+        alert('Pilih konten terlebih dahulu');
+        return;
+    }
+    
+    $('#bulkAction').val('approve');
+    $('#commentSection').hide();
+    $('#selectedCount').text(selectedIds.length);
+    $('#bulkReviewTitle').text('Setujui Konten Terpilih');
+    $('#bulkReviewModal').modal('show');
+}
+
+function bulkReject() {
+    const selectedIds = getSelectedIds();
+    if (selectedIds.length === 0) {
+        alert('Pilih konten terlebih dahulu');
+        return;
+    }
+    
+    $('#bulkAction').val('reject');
+    $('#commentSection').show();
+    $('#selectedCount').text(selectedIds.length);
+    $('#bulkReviewTitle').text('Tolak Konten Terpilih');
+    $('#bulkReviewModal').modal('show');
+}
+
+function getSelectedIds() {
+    return $('.content-checkbox:checked').map(function() {
+        return $(this).val();
+    }).get();
+}
+
+function processBulkReview() {
+    const action = $('#bulkAction').val();
+    const comment = $('#bulkComment').val();
+    const selectedIds = getSelectedIds();
+    
+    if (!action) {
+        alert('Pilih aksi terlebih dahulu');
+        return;
+    }
+    
+    if (action === 'reject' && !comment.trim()) {
+        alert('Komentar wajib diisi untuk penolakan');
+        return;
+    }
+    
+    // Process each content individually
+    let processed = 0;
+    let errors = 0;
+    
+    selectedIds.forEach(function(id, index) {
+        setTimeout(function() {
+            $.ajax({
+                url: `/editor/content/${id}/review`,
+                type: 'POST',
+                data: {
+                    action: action,
+                    review_comment: comment,
+                    csrf_token: $('meta[name=csrf-token]').attr('content')
+                },
+                success: function(response) {
+                    processed++;
+                    if (processed + errors === selectedIds.length) {
+                        $('#bulkReviewModal').modal('hide');
+                        alert(`Berhasil memproses ${processed} konten`);
+                        location.reload();
+                    }
+                },
+                error: function() {
+                    errors++;
+                    if (processed + errors === selectedIds.length) {
+                        $('#bulkReviewModal').modal('hide');
+                        alert(`Berhasil memproses ${processed} konten, ${errors} gagal`);
+                        location.reload();
+                    }
+                }
+            });
+        }, index * 500); // Delay each request by 500ms
+    });
+}
+
+// Show/hide comment section based on action
+$('#bulkAction').on('change', function() {
+    if ($(this).val() === 'reject') {
+        $('#commentSection').show();
+        $('#bulkComment').prop('required', true);
+    } else {
+        $('#commentSection').hide();
+        $('#bulkComment').prop('required', false);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends "base/base.html" %}
+
+{% block title %}Analytics - Editor{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Analytics Dashboard</h2>
+    <a href="{{ url_for('editor.dashboard') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+    </a>
+</div>
+
+<!-- Overview Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_content }}</h4>
+                        <p class="mb-0">Total Konten</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-file-text fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_views }}</h4>
+                        <p class="mb-0">Total Views</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-eye fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ author_stats|length }}</h4>
+                        <p class="mb-0">Active Authors</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-people fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ category_stats|length }}</h4>
+                        <p class="mb-0">Categories</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-tags fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Content by Status -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Konten berdasarkan Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Content by Category -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Konten berdasarkan Kategori</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Top Authors -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Top Authors</h5>
+            </div>
+            <div class="card-body">
+                {% for name, content_count, total_views in author_stats %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>{{ name }}</span>
+                    <div>
+                        <span class="badge bg-primary">{{ content_count }} konten</span>
+                        <span class="badge bg-success">{{ total_views or 0 }} views</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Monthly Trend -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Trend Pembuatan Konten</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Status Chart
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusData = {{ status_stats|tojson }};
+
+new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: statusData.map(item => item[0]),
+        datasets: [{
+            data: statusData.map(item => item[1]),
+            backgroundColor: [
+                '#6c757d', // draft
+                '#ffc107', // pending_review
+                '#28a745', // published
+                '#dc3545'  // rejected
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Category Chart
+const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+const categoryData = {{ category_stats|tojson }};
+
+new Chart(categoryCtx, {
+    type: 'bar',
+    data: {
+        labels: categoryData.map(item => item[0]),
+        datasets: [{
+            label: 'Jumlah Konten',
+            data: categoryData.map(item => item[1]),
+            backgroundColor: 'rgba(54, 162, 235, 0.8)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Monthly Chart
+const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+const monthlyData = {{ monthly_stats|tojson }};
+
+new Chart(monthlyCtx, {
+    type: 'line',
+    data: {
+        labels: monthlyData.map(item => item[0]),
+        datasets: [{
+            label: 'Konten Dibuat',
+            data: monthlyData.map(item => item[1]),
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

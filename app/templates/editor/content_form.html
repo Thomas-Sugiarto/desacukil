@@ -1,0 +1,649 @@
+{% extends "base/dashboard.html" %}
+{% from "components/alerts.html" import render_flash_messages, validation_summary %}
+{% from "components/breadcrumb.html" import editor_breadcrumb %}
+
+{% block title %}
+    {% if content %}Edit Konten{% else %}Buat Konten Baru{% endif %} - Editor - {{ site_settings.site_name }}
+{% endblock %}
+
+{% block breadcrumb %}
+    {% if content %}
+        {{ editor_breadcrumb('Edit Konten', [
+            {'title': 'Daftar Konten', 'url': url_for('editor.content_list')}
+        ]) }}
+    {% else %}
+        {{ editor_breadcrumb('Buat Konten Baru') }}
+    {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<!-- TinyMCE Rich Text Editor -->
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<style>
+.auto-save-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.auto-save-indicator.saving {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.auto-save-indicator.saved {
+    background-color: #198754;
+    color: #fff;
+}
+
+.auto-save-indicator.error {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.content-stats {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-left: 4px solid #0d6efd;
+}
+
+.image-preview-container {
+    position: relative;
+    display: inline-block;
+}
+
+.image-preview-container .remove-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(220, 53, 69, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.drag-drop-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 0.375rem;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.drag-drop-area:hover,
+.drag-drop-area.dragover {
+    border-color: #0d6efd;
+    background-color: #f8f9ff;
+}
+
+.youtube-preview {
+    margin-top: 1rem;
+}
+
+.youtube-preview iframe {
+    width: 100%;
+    height: 200px;
+    border-radius: 0.375rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Auto-save Indicator -->
+    <div id="autoSaveIndicator" class="auto-save-indicator" style="display: none;">
+        <i class="bi bi-cloud-arrow-up me-1"></i>
+        <span class="indicator-text">Menyimpan...</span>
+    </div>
+
+    <!-- Flash Messages -->
+    {{ render_flash_messages() }}
+    
+    <!-- Form Validation Summary -->
+    {{ validation_summary(form) }}
+    
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                {% if content %}Edit Konten{% else %}Buat Konten Baru{% endif %}
+            </h2>
+            <p class="text-muted mb-0">
+                {% if content %}Perbarui konten dengan editor lengkap{% else %}Buat konten baru dengan editor yang powerful{% endif %}
+            </p>
+        </div>
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('editor.content_list') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Kembali
+            </a>
+            {% if content %}
+                <a href="{{ url_for('public.content_detail', slug=content.slug) }}" 
+                   class="btn btn-info" target="_blank">
+                    <i class="bi bi-eye me-1"></i>Preview
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="content-form" class="needs-validation" novalidate>
+        {{ form.hidden_tag() }}
+        
+        <div class="row">
+            <!-- Main Content Form -->
+            <div class="col-lg-8 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-file-earmark-text me-2"></i>
+                            Detail Konten
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Title -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Judul Konten <span class="text-danger">*</span></label>
+                            {{ form.title(class='form-control form-control-lg auto-save-field', 
+                                         placeholder='Masukkan judul konten yang menarik...',
+                                         id='title') }}
+                            <div class="form-text d-flex justify-content-between">
+                                <span>Judul yang baik akan menarik perhatian pembaca</span>
+                                <span class="title-counter">0/100 karakter</span>
+                            </div>
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.title.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Excerpt -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Ringkasan/Excerpt</label>
+                            {{ form.excerpt(class='form-control auto-save-field', rows='3',
+                                           placeholder='Tulis ringkasan singkat tentang konten ini...',
+                                           id='excerpt') }}
+                            <div class="form-text d-flex justify-content-between">
+                                <span>Ringkasan akan ditampilkan di halaman utama dan hasil pencarian</span>
+                                <span class="excerpt-counter">0/500 karakter</span>
+                            </div>
+                            {% if form.excerpt.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.excerpt.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Content with Rich Text Editor -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Konten <span class="text-danger">*</span></label>
+                            {{ form.content(class='form-control auto-save-field rich-text-editor', 
+                                           id='content') }}
+                            <div class="form-text d-flex justify-content-between">
+                                <span>Editor lengkap dengan formatting, gambar, dan link</span>
+                                <div>
+                                    <span class="content-length">0</span> karakter • 
+                                    <span class="reading-time">0</span> menit baca
+                                </div>
+                            </div>
+                            {% if form.content.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.content.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- YouTube URL -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">URL Video YouTube (Opsional)</label>
+                            {{ form.youtube_url(class='form-control', 
+                                               placeholder='https://www.youtube.com/watch?v=...',
+                                               id='youtube_url') }}
+                            <div class="form-text">Jika ada, video akan ditampilkan di konten</div>
+                            <div class="youtube-preview" id="youtubePreview"></div>
+                            {% if form.youtube_url.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.youtube_url.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4 mb-4">
+                <!-- Publish Options -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-send me-2"></i>
+                            Publikasi
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Category -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Kategori <span class="text-danger">*</span></label>
+                            {{ form.category_id(class='form-select', id='category_id') }}
+                            {% if form.category_id.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.category_id.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Editor can directly publish -->
+                        <div class="d-grid">
+                            <button type="submit" name="publish" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle me-1"></i>
+                                {% if content and content.status == 'published' %}
+                                    Perbarui & Publikasikan
+                                {% else %}
+                                    Publikasikan Sekarang
+                                {% endif %}
+                            </button>
+                        </div>
+
+                        <!-- Auto-save indicator -->
+                        <div class="mt-3 text-center">
+                            <small class="text-muted save-indicator">
+                                <i class="bi bi-cloud-check me-1"></i>
+                                <span class="save-text">Otomatis tersimpan</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cover Image with Drag & Drop -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-image me-2"></i>
+                            Gambar Cover
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Drag & Drop Area -->
+                        <div class="drag-drop-area" id="dragDropArea">
+                            <i class="bi bi-cloud-upload display-4 text-muted mb-2"></i>
+                            <p class="mb-2">Drag & drop gambar di sini atau</p>
+                            {{ form.cover_image(class='form-control', accept='image/*', style='display: none;', id='coverImageInput') }}
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="$('#coverImageInput').click()">
+                                Pilih File
+                            </button>
+                            <div class="form-text mt-2">
+                                Format: JPG, PNG, WebP. Maksimal 5MB.<br>
+                                Ukuran ideal: 800x400px
+                            </div>
+                        </div>
+                        
+                        <!-- Image Preview -->
+                        <div class="image-preview mt-3" id="imagePreview">
+                            {% if content and content.cover_image %}
+                                <div class="image-preview-container">
+                                    <img src="{{ url_for('static', filename='uploads/' + content.cover_image) }}" 
+                                         class="img-thumbnail" style="max-width: 100%;">
+                                    <button type="button" class="btn remove-btn" onclick="removeImage()">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if form.cover_image.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.cover_image.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Content Statistics -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-graph-up me-2"></i>
+                            Statistik Konten
+                        </h6>
+                    </div>
+                    <div class="card-body content-stats">
+                        <div class="row g-2 small">
+                            <div class="col-6"><strong>Judul:</strong></div>
+                            <div class="col-6"><span class="title-length">0</span> karakter</div>
+                            
+                            <div class="col-6"><strong>Konten:</strong></div>
+                            <div class="col-6"><span class="content-length">0</span> karakter</div>
+                            
+                            <div class="col-6"><strong>Excerpt:</strong></div>
+                            <div class="col-6"><span class="excerpt-length">0</span> karakter</div>
+                            
+                            <div class="col-6"><strong>Waktu Baca:</strong></div>
+                            <div class="col-6"><span class="reading-time">0</span> menit</div>
+                            
+                            {% if content %}
+                                <div class="col-6"><strong>Status:</strong></div>
+                                <div class="col-6">
+                                    <span class="badge bg-{{ content.status|status_badge if content.status|status_badge else 'secondary' }}">
+                                        {{ content.status|title }}
+                                    </span>
+                                </div>
+                                
+                                <div class="col-6"><strong>Views:</strong></div>
+                                <div class="col-6">{{ content.view_count }}</div>
+                                
+                                <div class="col-6"><strong>Dibuat:</strong></div>
+                                <div class="col-6">{{ content.created_at.strftime('%d/%m/%Y') }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let autoSaveTimeout;
+let editor;
+
+$(document).ready(function() {
+    // Initialize TinyMCE Rich Text Editor
+    tinymce.init({
+        selector: '#content',
+        height: 400,
+        menubar: false,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | link image media | code preview fullscreen | help',
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; }',
+        setup: function(ed) {
+            editor = ed;
+            ed.on('input', function() {
+                updateContentStats();
+                triggerAutoSave();
+            });
+        },
+        image_upload_handler: function(blobInfo, success, failure) {
+            // Handle image upload - you can implement this based on your upload system
+            const formData = new FormData();
+            formData.append('file', blobInfo.blob(), blobInfo.filename());
+            
+            // This is a placeholder - implement actual upload logic
+            success('/static/uploads/placeholder.jpg');
+        }
+    });
+
+    // Initialize character counters
+    updateContentStats();
+    
+    // Update stats on input for non-TinyMCE fields
+    $('#title, #excerpt').on('input', function() {
+        updateContentStats();
+        triggerAutoSave();
+    });
+
+    // YouTube URL preview
+    $('#youtube_url').on('input', function() {
+        const url = $(this).val();
+        updateYouTubePreview(url);
+    });
+
+    // Initialize YouTube preview if editing
+    {% if content and content.youtube_url %}
+        updateYouTubePreview('{{ content.youtube_url }}');
+    {% endif %}
+
+    // Drag & Drop functionality
+    const dragDropArea = document.getElementById('dragDropArea');
+    const fileInput = document.getElementById('coverImageInput');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dragDropArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dragDropArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dragDropArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        dragDropArea.classList.add('dragover');
+    }
+
+    function unhighlight(e) {
+        dragDropArea.classList.remove('dragover');
+    }
+
+    dragDropArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            fileInput.files = files;
+            previewImage(files[0]);
+        }
+    }
+
+    // File input change handler
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            previewImage(e.target.files[0]);
+        }
+    });
+
+    // Auto-save functionality
+    function triggerAutoSave() {
+        clearTimeout(autoSaveTimeout);
+        showAutoSaveIndicator('saving');
+        
+        autoSaveTimeout = setTimeout(function() {
+            performAutoSave();
+        }, 2000); // Auto-save after 2 seconds of inactivity
+    }
+
+    function performAutoSave() {
+        const formData = new FormData();
+        formData.append('title', $('#title').val());
+        formData.append('excerpt', $('#excerpt').val());
+        formData.append('content', editor ? editor.getContent() : $('#content').val());
+        formData.append('category_id', $('#category_id').val());
+        formData.append('youtube_url', $('#youtube_url').val());
+        formData.append('auto_save', 'true');
+        formData.append('csrf_token', $('input[name="csrf_token"]').val());
+
+        $.ajax({
+            url: window.location.href,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                showAutoSaveIndicator('saved');
+                setTimeout(() => hideAutoSaveIndicator(), 2000);
+            },
+            error: function() {
+                showAutoSaveIndicator('error');
+                setTimeout(() => hideAutoSaveIndicator(), 3000);
+            }
+        });
+    }
+
+    function showAutoSaveIndicator(status) {
+        const indicator = $('#autoSaveIndicator');
+        const text = indicator.find('.indicator-text');
+        
+        indicator.removeClass('saving saved error').addClass(status).show();
+        
+        switch(status) {
+            case 'saving':
+                text.text('Menyimpan...');
+                break;
+            case 'saved':
+                text.text('Tersimpan');
+                break;
+            case 'error':
+                text.text('Gagal menyimpan');
+                break;
+        }
+    }
+
+    function hideAutoSaveIndicator() {
+        $('#autoSaveIndicator').fadeOut();
+    }
+
+    function updateContentStats() {
+        const title = $('#title').val();
+        const excerpt = $('#excerpt').val();
+        let content = '';
+        
+        if (editor) {
+            content = editor.getContent({format: 'text'});
+        } else {
+            content = $('#content').val();
+        }
+        
+        $('.title-length').text(title.length);
+        $('.title-counter').text(title.length + '/100 karakter');
+        $('.content-length').text(content.length);
+        $('.excerpt-length').text(excerpt.length);
+        $('.excerpt-counter').text(excerpt.length + '/500 karakter');
+        
+        // Reading time estimation (average 200 words per minute)
+        const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
+        const readingTime = Math.ceil(wordCount / 200) || 0;
+        $('.reading-time').text(readingTime);
+    }
+
+    function updateYouTubePreview(url) {
+        const previewDiv = $('#youtubePreview');
+        
+        if (!url) {
+            previewDiv.empty();
+            return;
+        }
+
+        // Extract video ID from various YouTube URL formats
+        let videoId = '';
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+
+        if (match && match[2].length === 11) {
+            videoId = match[2];
+            const embedHtml = `
+                <div class="ratio ratio-16x9">
+                    <iframe src="https://www.youtube.com/embed/${videoId}" 
+                            allowfullscreen class="rounded"></iframe>
+                </div>
+            `;
+            previewDiv.html(embedHtml);
+        } else {
+            previewDiv.html('<div class="alert alert-warning">URL YouTube tidak valid</div>');
+        }
+    }
+
+    function previewImage(file) {
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = `
+                    <div class="image-preview-container">
+                        <img src="${e.target.result}" class="img-thumbnail" style="max-width: 100%;">
+                        <button type="button" class="btn remove-btn" onclick="removeImage()">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                `;
+                $('#imagePreview').html(preview);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Form validation
+    $('#content-form').on('submit', function(e) {
+        const title = $('#title').val().trim();
+        let content = '';
+        
+        if (editor) {
+            content = editor.getContent({format: 'text'}).trim();
+        } else {
+            content = $('#content').val().trim();
+        }
+        
+        const category = $('#category_id').val();
+        
+        if (!title || title.length < 5) {
+            e.preventDefault();
+            alert('Judul minimal 5 karakter');
+            $('#title').focus();
+            return false;
+        }
+        
+        if (!content || content.length < 10) {
+            e.preventDefault();
+            alert('Konten minimal 10 karakter');
+            if (editor) {
+                editor.focus();
+            } else {
+                $('#content').focus();
+            }
+            return false;
+        }
+        
+        if (!category) {
+            e.preventDefault();
+            alert('Pilih kategori konten');
+            $('#category_id').focus();
+            return false;
+        }
+        
+        // Update hidden textarea with TinyMCE content before submit
+        if (editor) {
+            $('#content').val(editor.getContent());
+        }
+    });
+});
+
+function removeImage() {
+    $('#imagePreview').empty();
+    $('#coverImageInput').val('');
+}
+</script>
+{% endblock %}

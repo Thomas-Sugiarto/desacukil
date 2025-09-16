@@ -1,0 +1,248 @@
+<!-- Alert/Notification Components -->
+
+<!-- Flash Messages -->
+{% macro render_flash_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert-container">
+                {% for category, message in messages %}
+                    {% set alert_type = 'danger' if category == 'error' else category %}
+                    <div class="alert alert-{{ alert_type }} alert-dismissible fade show" role="alert">
+                        {% if category == 'success' %}
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                        {% elif category == 'error' or category == 'danger' %}
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {% elif category == 'warning' %}
+                            <i class="bi bi-exclamation-circle-fill me-2"></i>
+                        {% elif category == 'info' %}
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                        {% endif %}
+                        {{ message|safe }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+{% endmacro %}
+
+<!-- Success Alert -->
+{% macro success_alert(message, dismissible=true) %}
+    <div class="alert alert-success {{ 'alert-dismissible fade show' if dismissible }}" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        {{ message|safe }}
+        {% if dismissible %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+<!-- Error Alert -->
+{% macro error_alert(message, dismissible=true) %}
+    <div class="alert alert-danger {{ 'alert-dismissible fade show' if dismissible }}" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ message|safe }}
+        {% if dismissible %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+<!-- Warning Alert -->
+{% macro warning_alert(message, dismissible=true) %}
+    <div class="alert alert-warning {{ 'alert-dismissible fade show' if dismissible }}" role="alert">
+        <i class="bi bi-exclamation-circle-fill me-2"></i>
+        {{ message|safe }}
+        {% if dismissible %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+<!-- Info Alert -->
+{% macro info_alert(message, dismissible=true) %}
+    <div class="alert alert-info {{ 'alert-dismissible fade show' if dismissible }}" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        {{ message|safe }}
+        {% if dismissible %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+<!-- Custom Alert with Icon -->
+{% macro custom_alert(message, type='info', icon=None, dismissible=true) %}
+    <div class="alert alert-{{ type }} {{ 'alert-dismissible fade show' if dismissible }}" role="alert">
+        {% if icon %}
+            <i class="bi bi-{{ icon }} me-2"></i>
+        {% endif %}
+        {{ message|safe }}
+        {% if dismissible %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+<!-- Toast Notification -->
+{% macro toast_notification(id, title, message, type='info', delay=5000) %}
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+        <div id="{{ id }}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="{{ delay }}">
+            <div class="toast-header">
+                {% if type == 'success' %}
+                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                {% elif type == 'error' or type == 'danger' %}
+                    <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                {% elif type == 'warning' %}
+                    <i class="bi bi-exclamation-circle-fill text-warning me-2"></i>
+                {% else %}
+                    <i class="bi bi-info-circle-fill text-info me-2"></i>
+                {% endif %}
+                <strong class="me-auto">{{ title }}</strong>
+                <small class="text-muted">baru saja</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                {{ message|safe }}
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+<!-- Confirmation Alert -->
+{% macro confirmation_alert(message, confirm_text='Ya, Lanjutkan', cancel_text='Batal') %}
+    <div class="alert alert-warning" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-question-circle-fill me-3 fs-4"></i>
+            <div class="flex-grow-1">
+                <strong>Konfirmasi</strong><br>
+                {{ message|safe }}
+            </div>
+            <div class="ms-3">
+                <button type="button" class="btn btn-warning btn-sm me-2 confirm-btn">{{ confirm_text }}</button>
+                <button type="button" class="btn btn-secondary btn-sm cancel-btn">{{ cancel_text }}</button>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+<!-- Loading Alert -->
+{% macro loading_alert(message='Memproses...') %}
+    <div class="alert alert-info d-flex align-items-center" role="alert">
+        <div class="spinner-border spinner-border-sm me-3" role="status" aria-hidden="true"></div>
+        <div>{{ message }}</div>
+    </div>
+{% endmacro %}
+
+<!-- Validation Errors -->
+{% macro render_field_errors(field) %}
+    {% if field.errors %}
+        <div class="invalid-feedback d-block">
+            {% for error in field.errors %}
+                <div><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endmacro %}
+
+<!-- Form Validation Summary -->
+{% macro validation_summary(form) %}
+    {% set has_errors = false %}
+    {% for field in form %}
+        {% if field.errors %}
+            {% set has_errors = true %}
+        {% endif %}
+    {% endfor %}
+    
+    {% if has_errors %}
+        <div class="alert alert-danger" role="alert">
+            <h6 class="alert-heading">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                Terdapat kesalahan pada form:
+            </h6>
+            <ul class="mb-0">
+                {% for field in form %}
+                    {% if field.errors %}
+                        <li><strong>{{ field.label.text }}:</strong>
+                            {% for error in field.errors %}
+                                {{ error }}{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+{% endmacro %}
+
+<!-- Status Badge -->
+{% macro status_badge(status, text=None) %}
+    {% set badge_class = {
+        'draft': 'bg-secondary',
+        'pending_review': 'bg-warning text-dark',
+        'published': 'bg-success',
+        'rejected': 'bg-danger',
+        'active': 'bg-success',
+        'inactive': 'bg-secondary'
+    } %}
+    
+    {% set display_text = text or status.replace('_', ' ').title() %}
+    
+    <span class="badge {{ badge_class.get(status, 'bg-secondary') }}">
+        {{ display_text }}
+    </span>
+{% endmacro %}
+
+<!-- JavaScript for Toast Notifications -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-show toasts
+    var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+    var toastList = toastElList.map(function(toastEl) {
+        return new bootstrap.Toast(toastEl);
+    });
+    
+    toastList.forEach(function(toast) {
+        toast.show();
+    });
+    
+    // Auto-hide alerts after 10 seconds
+    setTimeout(function() {
+        var alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+        alerts.forEach(function(alert) {
+            var bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
+    }, 10000);
+});
+
+// Function to show toast programmatically
+function showToast(title, message, type = 'info', delay = 5000) {
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+            <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="${delay}">
+                <div class="toast-header">
+                    <i class="bi bi-${type === 'success' ? 'check-circle-fill text-success' : 
+                                     type === 'error' ? 'exclamation-triangle-fill text-danger' : 
+                                     type === 'warning' ? 'exclamation-circle-fill text-warning' : 
+                                     'info-circle-fill text-info'} me-2"></i>
+                    <strong class="me-auto">${title}</strong>
+                    <small class="text-muted">baru saja</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">${message}</div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', toastHtml);
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+    
+    // Remove toast element after it's hidden
+    toastElement.addEventListener('hidden.bs.toast', function() {
+        toastElement.parentElement.remove();
+    });
+}
+</script>

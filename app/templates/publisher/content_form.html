@@ -1,0 +1,344 @@
+{% extends "base/dashboard.html" %}
+{% from "components/alerts.html" import render_flash_messages, validation_summary %}
+{% from "components/breadcrumb.html" import publisher_breadcrumb %}
+
+{% block title %}
+    {% if content %}Edit Konten{% else %}Buat Konten Baru{% endif %} - Publisher - {{ site_settings.site_name }}
+{% endblock %}
+
+{% block breadcrumb %}
+    {% if content %}
+        {{ publisher_breadcrumb('Edit Konten', [
+            {'title': 'Konten Saya', 'url': url_for('publisher.content_list')}
+        ]) }}
+    {% else %}
+        {{ publisher_breadcrumb('Buat Konten Baru') }}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Flash Messages -->
+    {{ render_flash_messages() }}
+    
+    <!-- Form Validation Summary -->
+    {{ validation_summary(form) }}
+    
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                {% if content %}Edit Konten{% else %}Buat Konten Baru{% endif %}
+            </h2>
+            <p class="text-muted mb-0">
+                {% if content %}Perbarui konten Anda{% else %}Buat konten baru untuk website desa{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('publisher.content_list') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Kembali
+            </a>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="content-form" class="needs-validation" novalidate>
+        {{ form.hidden_tag() }}
+        
+        <div class="row">
+            <!-- Main Content Form -->
+            <div class="col-lg-8 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-file-earmark-text me-2"></i>
+                            Detail Konten
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Title -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Judul Konten <span class="text-danger">*</span></label>
+                            {{ form.title(class='form-control form-control-lg auto-save-field', 
+                                         placeholder='Masukkan judul konten yang menarik...') }}
+                            <div class="form-text d-flex justify-content-between">
+                                <span>Judul yang baik akan menarik perhatian pembaca</span>
+                                <span class="title-length">0</span>/100 karakter
+                            </div>
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.title.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Slug -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">URL Slug</label>
+                            <div class="input-group">
+                                <span class="input-group-text">{{ request.host_url }}content/</span>
+                                {{ form.slug(class='form-control', placeholder='url-konten-anda') }}
+                            </div>
+                            <div class="form-text">URL akan dibuat otomatis dari judul, atau Anda bisa mengubahnya</div>
+                            {% if form.slug.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.slug.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Excerpt -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Ringkasan/Excerpt</label>
+                            {{ form.excerpt(class='form-control auto-save-field', rows='3',
+                                           placeholder='Tulis ringkasan singkat tentang konten ini...') }}
+                            <div class="form-text d-flex justify-content-between">
+                                <span>Ringkasan akan ditampilkan di halaman utama dan hasil pencarian</span>
+                                <span class="excerpt-counter">0/500 karakter</span>
+                            </div>
+                            {% if form.excerpt.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.excerpt.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Content -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Konten <span class="text-danger">*</span></label>
+                            {{ form.content(class='form-control auto-save-field', rows='15',
+                                           placeholder='Tulis konten lengkap di sini...\n\nAnda bisa menggunakan format Markdown untuk styling:\n- **tebal**\n- *miring*\n- # Heading\n- [link](url)\n- ![gambar](url)') }}
+                            <div class="form-text d-flex justify-content-between">
+                                <span>Mendukung format Markdown untuk styling teks</span>
+                                <div>
+                                    <span class="content-length">0</span> karakter • 
+                                    <span class="reading-time">0</span> menit baca
+                                </div>
+                            </div>
+                            {% if form.content.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.content.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- YouTube URL -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">URL Video YouTube (Opsional)</label>
+                            {{ form.youtube_url(class='form-control', 
+                                               placeholder='https://www.youtube.com/watch?v=...') }}
+                            <div class="form-text">Jika ada, video akan ditampilkan di konten</div>
+                            <div class="youtube-preview"></div>
+                            {% if form.youtube_url.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.youtube_url.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4 mb-4">
+                <!-- Publish Options -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-send me-2"></i>
+                            Publikasi
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Category -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Kategori <span class="text-danger">*</span></label>
+                            {{ form.category_id(class='form-select') }}
+                            {% if form.category_id.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.category_id.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Save Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" name="save_draft" class="btn btn-secondary">
+                                <i class="bi bi-file-earmark me-1"></i>
+                                Simpan sebagai Draft
+                            </button>
+                            
+                            {% if not content or content.status in ['draft', 'rejected'] %}
+                                <button type="submit" name="submit_review" class="btn btn-success">
+                                    <i class="bi bi-send me-1"></i>
+                                    Kirim untuk Review
+                                </button>
+                            {% endif %}
+                        </div>
+
+                        <!-- Auto-save indicator -->
+                        <div class="mt-2 text-center">
+                            <small class="text-muted save-indicator">
+                                <i class="bi bi-cloud me-1"></i>
+                                Otomatis tersimpan
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cover Image -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-image me-2"></i>
+                            Gambar Cover
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {{ form.cover_image(class='form-control', accept='image/*') }}
+                        <div class="form-text mb-3">
+                            Format: JPG, PNG, WebP. Maksimal 5MB.<br>
+                            Ukuran ideal: 800x400px
+                        </div>
+                        
+                        <!-- Image Preview -->
+                        <div class="image-preview">
+                            {% if content and content.cover_image %}
+                                <img src="{{ url_for('static', filename='uploads/' + content.cover_image) }}" 
+                                     class="img-thumbnail" style="max-width: 100%;">
+                                <button type="button" class="btn btn-sm btn-danger mt-2 remove-image">
+                                    <i class="bi bi-trash me-1"></i>Hapus Gambar
+                                </button>
+                            {% endif %}
+                        </div>
+                        
+                        {% if form.cover_image.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.cover_image.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Content Statistics -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-graph-up me-2"></i>
+                            Statistik Konten
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2 small">
+                            <div class="col-6"><strong>Judul:</strong></div>
+                            <div class="col-6"><span class="title-length">0</span> karakter</div>
+                            
+                            <div class="col-6"><strong>Konten:</strong></div>
+                            <div class="col-6"><span class="content-length">0</span> karakter</div>
+                            
+                            <div class="col-6"><strong>Excerpt:</strong></div>
+                            <div class="col-6"><span class="excerpt-length">0</span> karakter</div>
+                            
+                            <div class="col-6"><strong>Waktu Baca:</strong></div>
+                            <div class="col-6"><span class="reading-time">0</span> menit</div>
+                            
+                            {% if content %}
+                                <div class="col-6"><strong>Status:</strong></div>
+                                <div class="col-6">
+                                    <span class="badge bg-{{ content.status|status_badge }}">
+                                        {{ content.status|status_text }}
+                                    </span>
+                                </div>
+                                
+                                <div class="col-6"><strong>Views:</strong></div>
+                                <div class="col-6">{{ content.view_count }}</div>
+                                
+                                <div class="col-6"><strong>Dibuat:</strong></div>
+                                <div class="col-6">{{ content.created_at.strftime('%d/%m/%Y') }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/publisher.js') }}"></script>
+<script>
+$(document).ready(function() {
+    // Initialize character counters
+    updateContentStats();
+    
+    // Update stats on input
+    $('#title, #content, #excerpt').on('input', updateContentStats);
+    
+    function updateContentStats() {
+        const title = $('#title').val();
+        const content = $('#content').val();
+        const excerpt = $('#excerpt').val();
+        
+        $('.title-length').text(title.length);
+        $('.content-length').text(content.length);
+        $('.excerpt-length').text(excerpt.length);
+        
+        // Reading time estimation (average 200 words per minute)
+        const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
+        const readingTime = Math.ceil(wordCount / 200) || 0;
+        $('.reading-time').text(readingTime);
+    }
+    
+    // Form validation
+    $('#content-form').on('submit', function(e) {
+        const action = e.originalEvent.submitter.name;
+        
+        if (action === 'submit_review') {
+            const title = $('#title').val().trim();
+            const content = $('#content').val().trim();
+            const category = $('#category_id').val();
+            
+            if (!title || title.length < 5) {
+                e.preventDefault();
+                alert('Judul minimal 5 karakter');
+                $('#title').focus();
+                return false;
+            }
+            
+            if (!content || content.length < 10) {
+                e.preventDefault();
+                alert('Konten minimal 10 karakter');
+                $('#content').focus();
+                return false;
+            }
+            
+            if (!category) {
+                e.preventDefault();
+                alert('Pilih kategori konten');
+                $('#category_id').focus();
+                return false;
+            }
+            
+            if (!confirm('Apakah Anda yakin ingin mengirim konten ini untuk review?\n\nSetelah dikirim, konten tidak dapat diedit sampai proses review selesai.')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,33 @@
+import os
+from app import create_app, db
+from app.models import User, Role, Content, Category, AuditLog, Setting
+from flask_migrate import upgrade
+
+app = create_app(os.getenv('FLASK_ENV') or 'development')
+
+@app.shell_context_processor
+def make_shell_context():
+    return {
+        'db': db, 
+        'User': User, 
+        'Role': Role, 
+        'Content': Content, 
+        'Category': Category,
+        'AuditLog': AuditLog,
+        'Setting': Setting
+    }
+
+@app.cli.command()
+def deploy():
+    """Run deployment tasks."""
+    # Create database tables
+    upgrade()
+    
+    # Create or update roles
+    Role.insert_roles()
+    
+    # Create or update settings
+    Setting.insert_default_settings()
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)

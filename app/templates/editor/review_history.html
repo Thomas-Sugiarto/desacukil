@@ -1,0 +1,201 @@
+{% extends "base/dashboard.html" %}
+{% from "components/alerts.html" import render_flash_messages, status_badge %}
+{% from "components/breadcrumb.html" import editor_breadcrumb %}
+{% from "components/pagination.html" import render_pagination %}
+
+{% block title %}Riwayat Review - Editor - {{ site_settings.site_name }}{% endblock %}
+
+{% block breadcrumb %}
+    {{ editor_breadcrumb('Riwayat Review') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Flash Messages -->
+    {{ render_flash_messages() }}
+    
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Riwayat Review</h2>
+            <p class="text-muted mb-0">Lihat semua review yang telah Anda lakukan</p>
+        </div>
+        <div>
+            <a href="{{ url_for('editor.review_queue') }}" class="btn btn-warning">
+                <i class="bi bi-clock me-1"></i>Antrian Review
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-check-circle text-success display-4 mb-2"></i>
+                    <h3 class="mb-1">{{ stats.approved or 0 }}</h3>
+                    <p class="text-muted mb-0">Disetujui</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-x-circle text-danger display-4 mb-2"></i>
+                    <h3 class="mb-1">{{ stats.rejected or 0 }}</h3>
+                    <p class="text-muted mb-0">Ditolak</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-calendar text-primary display-4 mb-2"></i>
+                    <h3 class="mb-1">{{ stats.this_month or 0 }}</h3>
+                    <p class="text-muted mb-0">Bulan Ini</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-graph-up text-info display-4 mb-2"></i>
+                    <h3 class="mb-1">{{ stats.total or 0 }}</h3>
+                    <p class="text-muted mb-0">Total Review</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review History List -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0">
+            <h5 class="card-title mb-0">
+                Riwayat Review ({{ reviews.total or 0 }} review)
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if reviews and reviews.items %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="40%">Konten</th>
+                                <th width="15%">Penulis</th>
+                                <th width="10%">Kategori</th>
+                                <th width="10%">Keputusan</th>
+                                <th width="15%">Tanggal Review</th>
+                                <th width="10%">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for content in reviews.items %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0 me-3">
+                                            {% if content.cover_image %}
+                                                <img src="{{ url_for('static', filename='uploads/' + content.cover_image) }}" 
+                                                     class="rounded" width="60" height="45" style="object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                                     style="width: 60px; height: 45px;">
+                                                    <i class="bi bi-file-earmark-text text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                <a href="{{ url_for('public.content_detail', slug=content.slug) }}" 
+                                                   class="text-decoration-none" target="_blank">
+                                                    {{ content.title }}
+                                                </a>
+                                            </h6>
+                                            {% if content.review_comment %}
+                                                <p class="text-muted mb-0 small">
+                                                    <i class="bi bi-chat-left-text me-1"></i>
+                                                    {{ content.review_comment|truncate(60) }}
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ url_for('static', filename='images/default-avatar.png') }}" 
+                                             class="rounded-circle me-2" width="32" height="32">
+                                        <div>
+                                            <div class="fw-medium">{{ content.author.full_name }}</div>
+                                            <small class="text-muted">{{ content.author.role.name.title() }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if content.category %}
+                                        <span class="badge" style="background-color: {{ content.category.color }};">
+                                            {{ content.category.name }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if content.status == 'published' %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>Disetujui
+                                        </span>
+                                    {% elif content.status == 'rejected' %}
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-x-circle me-1"></i>Ditolak
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="small">
+                                        <div>{{ content.updated_at.strftime('%d/%m/%Y') }}</div>
+                                        <div class="text-muted">{{ content.updated_at.strftime('%H:%M') }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('public.content_detail', slug=content.slug) }}" 
+                                           class="btn btn-outline-primary" target="_blank" title="Lihat">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-info" 
+                                                onclick="showReviewDetails('{{ content.id }}')" title="Detail Review">
+                                            <i class="bi bi-info-circle"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-clock-history display-1 text-muted mb-3"></i>
+                    <h5 class="text-muted">Belum ada riwayat review</h5>
+                    <p class="text-muted">Review yang telah Anda lakukan akan muncul di sini</p>
+                    <a href="{{ url_for('editor.review_queue') }}" class="btn btn-warning">
+                        <i class="bi bi-clock me-1"></i>Lihat Antrian Review
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if reviews and reviews.pages > 1 %}
+        <div class="mt-4">
+            {{ render_pagination(reviews, 'editor.review_history', 
+                                search=request.args.get('search'),
+                                status=request.args.get('status'),
+                                category=request.args.get('category'),
+                                period=request.args.get('period'),
+                                sort=request.args.get('sort')) }}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

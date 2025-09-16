@@ -1,0 +1,171 @@
+version: '3.8'
+
+services:
+  # Flask web application
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: cms_desa_web
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://cms_user:cms_password@db:5432/cms_desa
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-change-this-in-production}
+      - MAIL_SERVER=${MAIL_SERVER}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ../app/static/uploads:/app/app/static/uploads
+      - ../logs:/app/logs
+    networks:
+      - cms_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cms-desa.rule=Host(`cms-desa.local`)"
+      - "traefik.http.services.cms-desa.loadbalancer.server.port=5000"
+
+  # PostgreSQL database
+  db:
+    image: postgres:15-alpine
+    container_name: cms_desa_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=cms_desa
+      - POSTGRES_USER=cms_user
+      - POSTGRES_PASSWORD=cms_password
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql:ro
+      - ../backups:/backups
+    ports:
+      - "5432:5432"
+    networks:
+      - cms_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cms_user -d cms_desa"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for caching and rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: cms_desa_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - cms_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: cms_desa_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../app/static:/var/www/static:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - web
+    networks:
+      - cms_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Database backup service
+  backup:
+    image: postgres:15-alpine
+    container_name: cms_desa_backup
+    restart: "no"
+    environment:
+      - PGPASSWORD=cms_password
+    volumes:
+      - ../backups:/backups
+      - ./backup.sh:/backup.sh:ro
+    networks:
+      - cms_network
+    depends_on:
+      - db
+    entrypoint: /backup.sh
+    profiles:
+      - backup
+
+  # Monitoring with Prometheus (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: cms_desa_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - cms_network
+    profiles:
+      - monitoring
+
+  # Grafana for monitoring dashboard (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: cms_desa_grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - cms_network
+    profiles:
+      - monitoring
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  nginx_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  cms_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

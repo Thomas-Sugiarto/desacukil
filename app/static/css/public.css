@@ -1,0 +1,493 @@
+/* CMS Desa - Public CSS - Green Theme Only */
+
+:root {
+    /* Green color palette - different shades and opacities */
+    --primary-green: #1b5e20;        /* Dark green base */
+    --secondary-green: #2e7d32;      /* Medium green */
+    --light-green: #4caf50;          /* Standard green */
+    --lighter-green: #66bb6a;        /* Light green */
+    --lightest-green: #c8e6c9;       /* Very light green */
+    --green-opacity-10: rgba(27, 94, 32, 0.1);
+    --green-opacity-20: rgba(27, 94, 32, 0.2);
+    --green-opacity-30: rgba(27, 94, 32, 0.3);
+    --green-opacity-50: rgba(27, 94, 32, 0.5);
+    --green-opacity-80: rgba(27, 94, 32, 0.8);
+    
+    /* White variations */
+    --white: #ffffff;
+    --off-white: #fafafa;
+    --light-gray: #f5f5f5;
+    
+    /* Text colors */
+    --text-dark: var(--primary-green);
+    --text-muted: var(--secondary-green);
+    --border-color: var(--green-opacity-20);
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--text-dark);
+    background-color: var(--white);
+}
+
+/* Navigation */
+.navbar {
+    background-color: var(--white) !important;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    color: var(--primary-green) !important;
+    font-weight: 700;
+}
+
+.navbar-nav .nav-link {
+    font-weight: 500;
+    color: var(--secondary-green) !important;
+    transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: var(--light-green) !important;
+}
+
+.navbar-toggler {
+    border-color: var(--green-opacity-30);
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
+    color: var(--white);
+    padding: 4rem 0;
+    margin-bottom: 2rem;
+}
+
+.hero-section h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.hero-section p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+/* Cards */
+.card {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 2px 10px var(--green-opacity-10);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: var(--white);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px var(--green-opacity-20);
+}
+
+.card-img-top {
+    border-radius: 10px 10px 0 0;
+    height: 200px;
+    object-fit: cover;
+}
+
+.card-title {
+    color: var(--primary-green);
+}
+
+.card-text {
+    color: var(--text-muted);
+}
+
+/* Category badges */
+.category-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 20px;
+    color: var(--white);
+    text-decoration: none;
+    margin-bottom: 0.5rem;
+    background-color: var(--light-green);
+}
+
+.category-badge:hover {
+    color: var(--white);
+    background-color: var(--secondary-green);
+}
+
+/* Status badges - All green variations */
+.badge {
+    font-weight: 500;
+}
+
+.bg-primary { background-color: var(--light-green) !important; }
+.bg-success { background-color: var(--primary-green) !important; }
+.bg-info { background-color: var(--lighter-green) !important; }
+.bg-warning { background-color: var(--green-opacity-80) !important; }
+.bg-danger { background-color: var(--green-opacity-50) !important; }
+.bg-secondary { background-color: var(--green-opacity-30) !important; }
+
+/* Buttons - All green variations */
+.btn-primary {
+    background-color: var(--light-green);
+    border-color: var(--light-green);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary-green);
+    border-color: var(--secondary-green);
+}
+
+.btn-success {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+    color: var(--white);
+}
+
+.btn-success:hover {
+    background-color: var(--secondary-green);
+    border-color: var(--secondary-green);
+}
+
+.btn-outline-primary {
+    color: var(--light-green);
+    border-color: var(--light-green);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--light-green);
+    border-color: var(--light-green);
+    color: var(--white);
+}
+
+.btn-outline-success {
+    color: var(--primary-green);
+    border-color: var(--primary-green);
+}
+
+.btn-outline-success:hover {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+    color: var(--white);
+}
+
+.btn-info {
+    background-color: var(--lighter-green);
+    border-color: var(--lighter-green);
+    color: var(--white);
+}
+
+.btn-info:hover {
+    background-color: var(--light-green);
+    border-color: var(--light-green);
+}
+
+.btn-warning {
+    background-color: var(--green-opacity-80);
+    border-color: var(--green-opacity-80);
+    color: var(--white);
+}
+
+.btn-warning:hover {
+    background-color: var(--secondary-green);
+    border-color: var(--secondary-green);
+}
+
+.btn-danger {
+    background-color: var(--green-opacity-50);
+    border-color: var(--green-opacity-50);
+    color: var(--white);
+}
+
+.btn-danger:hover {
+    background-color: var(--green-opacity-80);
+    border-color: var(--green-opacity-80);
+}
+
+.btn-secondary {
+    background-color: var(--green-opacity-30);
+    border-color: var(--green-opacity-30);
+    color: var(--white);
+}
+
+.btn-secondary:hover {
+    background-color: var(--green-opacity-50);
+    border-color: var(--green-opacity-50);
+}
+
+.btn-outline-secondary {
+    color: var(--secondary-green);
+    border-color: var(--secondary-green);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--secondary-green);
+    border-color: var(--secondary-green);
+    color: var(--white);
+}
+
+/* Content sections */
+.section-title {
+    color: var(--primary-green);
+    font-weight: 700;
+    margin-bottom: 2rem;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background-color: var(--light-green);
+}
+
+/* Links */
+a {
+    color: var(--light-green);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--secondary-green);
+}
+
+/* YouTube embed container */
+.youtube-container {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    margin: 1rem 0;
+}
+
+.youtube-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+}
+
+
+/* Breadcrumb */
+.breadcrumb {
+    background-color: var(--lightest-green);
+}
+
+.breadcrumb-item a {
+    color: var(--secondary-green);
+}
+
+.breadcrumb-item.active {
+    color: var(--primary-green);
+}
+
+/* Forms */
+.form-control {
+    border-color: var(--green-opacity-30);
+}
+
+.form-control:focus {
+    border-color: var(--light-green);
+    box-shadow: 0 0 0 0.2rem var(--green-opacity-20);
+}
+
+.form-select {
+    border-color: var(--green-opacity-30);
+}
+
+.form-select:focus {
+    border-color: var(--light-green);
+    box-shadow: 0 0 0 0.2rem var(--green-opacity-20);
+}
+
+/* Alerts */
+.alert-success {
+    background-color: var(--lightest-green);
+    border-color: var(--light-green);
+    color: var(--primary-green);
+}
+
+.alert-info {
+    background-color: var(--green-opacity-10);
+    border-color: var(--lighter-green);
+    color: var(--secondary-green);
+}
+
+.alert-warning {
+    background-color: var(--green-opacity-20);
+    border-color: var(--green-opacity-50);
+    color: var(--primary-green);
+}
+
+.alert-danger {
+    background-color: var(--green-opacity-10);
+    border-color: var(--green-opacity-30);
+    color: var(--secondary-green);
+}
+
+.alert-light {
+    background-color: var(--off-white);
+    border-color: var(--green-opacity-20);
+    color: var(--secondary-green);
+}
+
+/* Footer */
+footer {
+    background-color: var(--primary-green);
+    color: var(--white);
+}
+
+footer a {
+    color: var(--lightest-green);
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: var(--white);
+}
+
+/* Tables */
+.table {
+    background-color: var(--white);
+}
+
+.table th {
+    background-color: var(--lightest-green);
+    color: var(--primary-green);
+    border-color: var(--border-color);
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--green-opacity-10);
+}
+
+/* List groups */
+.list-group-item {
+    border-color: var(--border-color);
+    color: var(--primary-green);
+}
+
+.list-group-item:hover {
+    background-color: var(--green-opacity-10);
+}
+
+.list-group-item-action:hover {
+    background-color: var(--green-opacity-10);
+}
+
+/* Ubah warna hover kategori lainnya */
+.categories-widget .list-group-item:hover {
+    color: #198754 !important;          /* hijau Bootstrap (success) */
+    background-color: #eaf6f0 !important; /* hijau muda biar ada highlight */
+}
+
+.categories-widget .list-group-item:hover .badge {
+    background-color: #198754 !important;
+    color: #fff !important;
+}
+
+/* Style untuk link kategori */
+.category-link {
+    color: #198754; /* hijau normal */
+}
+
+.category-link:hover {
+    color: #198754; /* tetap hijau saat hover */
+    background-color: #eaf6f0; /* opsional: hijau muda */
+}
+
+/* Kalau mau badge ikut hijau juga saat hover */
+.category-link:hover .badge {
+    background-color: #198754 !important;
+    color: #fff !important;
+}
+
+.category-link.active {
+    background-color: #198754 !important; /* hijau Bootstrap */
+    color: #fff !important;
+    border-color: #198754 !important;
+}
+
+/* Kalau badge ikut dibalik warna */
+.category-link.active .badge {
+    background-color: #fff !important;
+    color: #198754 !important;
+}
+
+/* Pagination */
+.page-link {
+    color: var(--light-green);
+    border-color: var(--border-color);
+}
+
+.page-link:hover {
+    color: var(--secondary-green);
+    background-color: var(--green-opacity-10);
+    border-color: var(--light-green);
+}
+
+.page-item.active .page-link {
+    background-color: var(--light-green);
+    border-color: var(--light-green);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+    
+    .hero-section p {
+        font-size: 1rem;
+    }
+    
+    .card-img-top {
+        height: 150px;
+    }
+}
+
+/* Content body styling */
+.content-body {
+    color: var(--text-dark);
+}
+
+.content-body h1, 
+.content-body h2, 
+.content-body h3, 
+.content-body h4, 
+.content-body h5, 
+.content-body h6 {
+    color: var(--primary-green);
+}
+
+.content-body blockquote {
+    border-left: 4px solid var(--light-green);
+    background-color: var(--green-opacity-10);
+}
+
+/* Meta information */
+.content-meta {
+    color: var(--text-muted);
+}
+
+.content-meta a {
+    color: var(--secondary-green);
+}
+
+.content-meta a:hover {
+    color: var(--light-green);
+}

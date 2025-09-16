@@ -1,0 +1,191 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{ title }}</h2>
+    <a href="{{ url_for('admin.content_list') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Kembali
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.title.label(class="form-label") }}
+                        {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.title.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.excerpt.label(class="form-label") }}
+                        {{ form.excerpt(class="form-control", rows="3", placeholder="Ringkasan singkat konten...") }}
+                        {% if form.excerpt.errors %}
+                        <div class="text-danger">
+                            {% for error in form.excerpt.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">Ringkasan akan ditampilkan di daftar konten dan halaman utama.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.content.label(class="form-label") }}
+                        {{ form.content(class="form-control" + (" is-invalid" if form.content.errors else ""), rows="15") }}
+                        {% if form.content.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.content.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.category_id.label(class="form-label") }}
+                                {{ form.category_id(class="form-select" + (" is-invalid" if form.category_id.errors else "")) }}
+                                {% if form.category_id.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.category_id.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.author_id.label(class="form-label") }}
+                                {{ form.author_id(class="form-select" + (" is-invalid" if form.author_id.errors else "")) }}
+                                {% if form.author_id.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.author_id.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Admin dapat menentukan penulis konten.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.status.label(class="form-label") }}
+                        {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                        {% if form.status.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.status.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">Admin dapat langsung mempublikasi konten.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.cover_image.label(class="form-label") }}
+                        {{ form.cover_image(class="form-control" + (" is-invalid" if form.cover_image.errors else "")) }}
+                        {% if form.cover_image.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.cover_image.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if content and content.cover_image %}
+                        <div class="mt-2">
+                            <small class="text-muted">Cover saat ini:</small><br>
+                            <img src="{{ get_file_url(content.cover_image) }}" alt="Current cover" class="img-thumbnail" style="max-width: 200px;">
+                        </div>
+                        {% endif %}
+                        <div class="form-text">Upload gambar cover (JPG, PNG, GIF - Max 16MB)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.youtube_url.label(class="form-label") }}
+                        {{ form.youtube_url(class="form-control" + (" is-invalid" if form.youtube_url.errors else ""), placeholder="https://www.youtube.com/watch?v=...") }}
+                        {% if form.youtube_url.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.youtube_url.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">URL video YouTube yang akan ditampilkan di konten (opsional).</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('admin.content_list') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check"></i> {{ form.submit.label.text }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Bantuan</h6>
+            </div>
+            <div class="card-body">
+                <h6>Status Konten:</h6>
+                <ul class="list-unstyled small">
+                    <li><span class="badge bg-secondary">Draft</span> - Konten belum selesai</li>
+                    <li><span class="badge bg-warning">Pending Review</span> - Menunggu persetujuan editor</li>
+                    <li><span class="badge bg-success">Published</span> - Konten dipublikasi</li>
+                    <li><span class="badge bg-danger">Rejected</span> - Konten ditolak</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Tips:</h6>
+                <ul class="small">
+                    <li>Gunakan judul yang menarik dan deskriptif</li>
+                    <li>Tulis ringkasan yang menggambarkan isi konten</li>
+                    <li>Pilih kategori yang sesuai</li>
+                    <li>Upload cover image untuk menarik perhatian</li>
+                    <li>Admin dapat langsung mempublikasi konten</li>
+                </ul>
+            </div>
+        </div>
+        
+        {% if content %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Informasi Konten</h6>
+            </div>
+            <div class="card-body small">
+                <p><strong>Dibuat:</strong> {{ content.created_at|datetime }}</p>
+                <p><strong>Diperbarui:</strong> {{ content.updated_at|datetime }}</p>
+                <p><strong>Views:</strong> {{ content.view_count }}</p>
+                {% if content.published_at %}
+                <p><strong>Dipublikasi:</strong> {{ content.published_at|datetime }}</p>
+                {% endif %}
+                {% if content.reviewer %}
+                <p><strong>Reviewer:</strong> {{ content.reviewer.full_name }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Auto-generate slug from title (optional enhancement)
+document.getElementById('title').addEventListener('input', function() {
+    // You can add slug generation here if needed
+});
+
+// YouTube URL validation preview
+document.getElementById('youtube_url').addEventListener('input', function() {
+    const url = this.value;
+    if (url) {
+        // You can add YouTube preview here if needed
+    }
+});
+</script>
+{% endblock %}

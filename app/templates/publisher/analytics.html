@@ -1,0 +1,164 @@
+{% extends "base/base.html" %}
+
+{% block title %}Analytics - Publisher{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Analytics</h2>
+    <a href="{{ url_for('publisher.dashboard') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+    </a>
+</div>
+
+<!-- Overview Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_content }}</h4>
+                        <p class="mb-0">Total Konten</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-file-text fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_views }}</h4>
+                        <p class="mb-0">Total Views</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-eye fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ (total_views / total_content)|round(1) if total_content > 0 else 0 }}</h4>
+                        <p class="mb-0">Avg Views/Content</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-graph-up fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ category_stats|length }}</h4>
+                        <p class="mb-0">Categories Used</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-tags fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Content by Status -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Konten berdasarkan Status</h5>
+            </div>
+            <div class="card-body">
+                {% for status, count in status_stats %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-{{ status|status_badge }}">{{ status|status_text }}</span>
+                    <span class="fw-bold">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Content by Category -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Konten berdasarkan Kategori</h5>
+            </div>
+            <div class="card-body">
+                {% for name, count, views in category_stats %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>{{ name }}</span>
+                    <div>
+                        <span class="badge bg-primary">{{ count }} konten</span>
+                        <span class="badge bg-success">{{ views or 0 }} views</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Content Creation -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Pembuatan Konten per Bulan</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Monthly Content Chart
+const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+const monthlyData = {{ monthly_stats|tojson }};
+
+new Chart(monthlyCtx, {
+    type: 'line',
+    data: {
+        labels: monthlyData.map(item => item[0]),
+        datasets: [{
+            label: 'Konten Dibuat',
+            data: monthlyData.map(item => item[1]),
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Trend Pembuatan Konten'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

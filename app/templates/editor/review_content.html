@@ -1,0 +1,350 @@
+{% extends "base/dashboard.html" %}
+{% from "components/alerts.html" import render_flash_messages, status_badge %}
+{% from "components/breadcrumb.html" import editor_breadcrumb %}
+
+{% block title %}Review Konten: {{ content.title }} - Editor - {{ site_settings.site_name }}{% endblock %}
+
+{% block breadcrumb %}
+    {{ editor_breadcrumb('Review Konten', [
+        {'title': 'Antrian Review', 'url': url_for('editor.review_queue')}
+    ]) }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Flash Messages -->
+    {{ render_flash_messages() }}
+    
+    <!-- Content Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center mb-2">
+                                <h2 class="mb-0 me-3">{{ content.title }}</h2>
+                                {{ status_badge(content.status) }}
+                            </div>
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="bi bi-person me-1"></i>
+                                <span class="me-3">{{ content.author.full_name }}</span>
+                                <i class="bi bi-calendar me-1"></i>
+                                <span class="me-3">{{ content.created_at.strftime('%d %B %Y, %H:%M') }}</span>
+                                {% if content.category %}
+                                    <i class="bi bi-tag me-1"></i>
+                                    <span>{{ content.category.name }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <a href="{{ url_for('public.content_detail', slug=content.slug) }}" 
+                               class="btn btn-outline-primary me-2" target="_blank">
+                                <i class="bi bi-eye me-1"></i>Preview
+                            </a>
+                            <a href="{{ url_for('editor.review_queue') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Kembali
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Content Preview -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        Konten untuk Review
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Cover Image -->
+                    {% if content.cover_image %}
+                        <div class="mb-4">
+                            <img src="{{ url_for('static', filename='uploads/' + content.cover_image) }}" 
+                                 class="img-fluid rounded" alt="{{ content.title }}">
+                        </div>
+                    {% endif %}
+
+                    <!-- Excerpt -->
+                    {% if content.excerpt %}
+                        <div class="mb-4">
+                            <h6 class="text-muted">Ringkasan:</h6>
+                            <p class="lead">{{ content.excerpt }}</p>
+                        </div>
+                    {% endif %}
+
+                    <!-- YouTube Video -->
+                    {% if content.youtube_url %}
+                        <div class="mb-4">
+                            <h6 class="text-muted">Video:</h6>
+                            <div class="ratio ratio-16x9">
+                                {% set video_id = content.get_youtube_embed_id() %}
+                                <iframe src="https://www.youtube.com/embed/{{ video_id }}" 
+                                        frameborder="0" allowfullscreen></iframe>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Content Body -->
+                    <div class="content-body">
+                        {{ content.content|safe }}
+                    </div>
+
+                    <!-- Content Metadata -->
+                    <div class="mt-4 pt-4 border-top">
+                        <div class="row text-muted small">
+                            <div class="col-md-6">
+                                <div class="mb-2">
+                                    <i class="bi bi-clock me-1"></i>
+                                    Dibuat: {{ content.created_at.strftime('%d %B %Y, %H:%M') }}
+                                </div>
+                                {% if content.updated_at != content.created_at %}
+                                    <div class="mb-2">
+                                        <i class="bi bi-pencil me-1"></i>
+                                        Diperbarui: {{ content.updated_at.strftime('%d %B %Y, %H:%M') }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-2">
+                                    <i class="bi bi-eye me-1"></i>
+                                    {{ content.view_count }} views
+                                </div>
+                                <div class="mb-2">
+                                    <i class="bi bi-file-text me-1"></i>
+                                    {% if content.content %}{{ content.content|string|length }}{% else %}0{% endif %} karakter
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Panel -->
+        <div class="col-lg-4 mb-4">
+            <!-- Review Form -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Review Konten
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('editor.content_review', id=content.id) }}" id="review-form">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Review Action -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Keputusan Review</label>
+                            {% for subfield in form.action %}
+                                <div class="form-check">
+                                    {{ subfield(class="form-check-input") }}
+                                    <label class="form-check-label {% if subfield.data == 'approve' %}text-success{% else %}text-danger{% endif %}" for="{{ subfield.id }}">
+                                        {% if subfield.data == 'approve' %}
+                                            <i class="bi bi-check-circle me-1"></i>
+                                            <strong>Setujui dan Publikasikan</strong>
+                                        {% else %}
+                                            <i class="bi bi-x-circle me-1"></i>
+                                            <strong>Tolak Konten</strong>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                            {% if form.action.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.action.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Review Comment -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Catatan Review</label>
+                            {{ form.review_comment(class='form-control', rows='4', 
+                                                 placeholder='Berikan catatan atau alasan untuk keputusan Anda...') }}
+                            <div class="form-text">
+                                <span id="comment-required" class="text-danger" style="display: none;">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Catatan wajib diisi untuk penolakan
+                                </span>
+                                <span id="comment-optional" class="text-muted">
+                                    Opsional untuk persetujuan, wajib untuk penolakan
+                                </span>
+                            </div>
+                            {% if form.review_comment.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.review_comment.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success" id="submit-btn" disabled>
+                                <i class="bi bi-check-lg me-1"></i>
+                                <span id="submit-text">Pilih Keputusan</span>
+                            </button>
+                            <a href="{{ url_for('editor.review_queue') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Kembali ke Antrian
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Content Info -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Informasi Konten
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2 small">
+                        <div class="col-6"><strong>Penulis:</strong></div>
+                        <div class="col-6">{{ content.author.full_name }}</div>
+                        
+                        <div class="col-6"><strong>Role:</strong></div>
+                        <div class="col-6">{{ content.author.role.name.title() }}</div>
+                        
+                        <div class="col-6"><strong>Email:</strong></div>
+                        <div class="col-6">{{ content.author.email }}</div>
+                        
+                        {% if content.category %}
+                            <div class="col-6"><strong>Kategori:</strong></div>
+                            <div class="col-6">
+                                <span class="badge" style="background-color: {{ content.category.color }};">
+                                    {{ content.category.name }}
+                                </span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="col-6"><strong>Status:</strong></div>
+                        <div class="col-6">{{ status_badge(content.status) }}</div>
+                        
+                        <div class="col-6"><strong>Dibuat:</strong></div>
+                        <div class="col-6">{{ content.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
+                        
+                        {% if content.updated_at != content.created_at %}
+                            <div class="col-6"><strong>Diperbarui:</strong></div>
+                            <div class="col-6">{{ content.updated_at.strftime('%d/%m/%Y %H:%M') }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Previous Reviews -->
+            {% if content.review_comment %}
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-clock-history me-2"></i>
+                            Review Sebelumnya
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <img src="{{ url_for('static', filename='images/default-avatar.png') }}" 
+                                 class="rounded-circle me-2" width="32" height="32">
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="fw-medium">{{ content.reviewer.full_name if content.reviewer else 'Editor' }}</small>
+                                    <small class="text-muted">{{ content.updated_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                                </div>
+                                <p class="mb-0 small">{{ content.review_comment }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Handle review action selection
+    $('input[name="action"]').on('change', function() {
+        const action = $(this).val();
+        const submitBtn = $('#submit-btn');
+        const submitText = $('#submit-text');
+        const commentRequired = $('#comment-required');
+        const commentOptional = $('#comment-optional');
+        
+        if (action === 'approve') {
+            submitBtn.removeClass('btn-danger').addClass('btn-success').prop('disabled', false);
+            submitText.html('<i class="bi bi-check-lg me-1"></i>Setujui dan Publikasikan');
+            commentRequired.hide();
+            commentOptional.show();
+        } else if (action === 'reject') {
+            submitBtn.removeClass('btn-success').addClass('btn-danger').prop('disabled', false);
+            submitText.html('<i class="bi bi-x-lg me-1"></i>Tolak Konten');
+            commentRequired.show();
+            commentOptional.hide();
+        }
+        
+        validateForm();
+    });
+    
+    // Validate form on comment input
+    $('#review_comment').on('input', function() {
+        validateForm();
+    });
+    
+    function validateForm() {
+        const action = $('input[name="action"]:checked').val();
+        const comment = $('#review_comment').val().trim();
+        const submitBtn = $('#submit-btn');
+        
+        if (!action) {
+            submitBtn.prop('disabled', true);
+            return;
+        }
+        
+        if (action === 'reject' && comment === '') {
+            submitBtn.prop('disabled', true);
+        } else {
+            submitBtn.prop('disabled', false);
+        }
+    }
+    
+    // Form submission confirmation
+    $('#review-form').on('submit', function(e) {
+        const action = $('input[name="action"]:checked').val();
+        
+        if (!action) {
+            e.preventDefault();
+            alert('Silakan pilih keputusan review terlebih dahulu.');
+            return;
+        }
+        
+        if (action === 'reject' && $('#review_comment').val().trim() === '') {
+            e.preventDefault();
+            alert('Catatan review wajib diisi untuk penolakan konten.');
+            return;
+        }
+        
+        const actionText = action === 'approve' ? 'menyetujui' : 'menolak';
+        
+        if (!confirm(`Apakah Anda yakin ingin ${actionText} konten ini?`)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

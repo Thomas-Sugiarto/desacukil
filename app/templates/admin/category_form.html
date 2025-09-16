@@ -1,0 +1,179 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ title }} - {{ site_settings.site_name or 'Portal Desa Digital' }}{% endblock %}
+
+{% block sidebar %}
+<ul class="nav flex-column">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+            <i class="bi bi-speedometer2"></i>
+            Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.users') }}">
+            <i class="bi bi-people"></i>
+            Kelola User
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.content_list') }}">
+            <i class="bi bi-file-earmark-text"></i>
+            Kelola Konten
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="{{ url_for('admin.categories') }}">
+            <i class="bi bi-tags"></i>
+            Kategori
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.settings') }}">
+            <i class="bi bi-gear"></i>
+            Pengaturan
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.audit_logs') }}">
+            <i class="bi bi-clock-history"></i>
+            Log Audit
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">{{ title }}</h6>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control") }}
+                        {% if form.name.errors %}
+                        <div class="text-danger">
+                            {% for error in form.name.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        {{ form.color.label(class="form-label") }}
+                        {{ form.color(class="form-control", type="color") }}
+                        {% if form.color.errors %}
+                        <div class="text-danger">
+                            {% for error in form.color.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        {{ form.sort_order.label(class="form-label") }}
+                        {{ form.sort_order(class="form-control", type="number") }}
+                        {% if form.sort_order.errors %}
+                        <div class="text-danger">
+                            {% for error in form.sort_order.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                {{ form.description.label(class="form-label") }}
+                {{ form.description(class="form-control", rows="3") }}
+                {% if form.description.errors %}
+                <div class="text-danger">
+                    {% for error in form.description.errors %}
+                    <small>{{ error }}</small>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <div class="form-check">
+                    {{ form.is_active(class="form-check-input") }}
+                    {{ form.is_active.label(class="form-check-label") }}
+                </div>
+                {% if form.is_active.errors %}
+                <div class="text-danger">
+                    {% for error in form.is_active.errors %}
+                    <small>{{ error }}</small>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('admin.categories') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Kembali
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>
+                    Simpan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if category %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-info">Preview Kategori</h6>
+    </div>
+    <div class="card-body">
+        <div class="d-flex align-items-center">
+            <div class="category-color me-3" 
+                 style="width: 30px; height: 30px; background-color: {{ category.color or '#6c757d' }}; border-radius: 5px;"></div>
+            <div>
+                <h6 class="mb-1">{{ category.name }}</h6>
+                <p class="text-muted mb-0">{{ category.description or 'Tidak ada deskripsi' }}</p>
+                <small class="text-muted">Slug: <code>{{ category.slug }}</code></small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Live preview for color changes
+document.addEventListener('DOMContentLoaded', function() {
+    const colorInput = document.querySelector('input[type="color"]');
+    const nameInput = document.querySelector('input[name="name"]');
+    
+    if (colorInput && nameInput) {
+        function updatePreview() {
+            // This could be expanded to show a live preview
+            console.log('Color:', colorInput.value, 'Name:', nameInput.value);
+        }
+        
+        colorInput.addEventListener('change', updatePreview);
+        nameInput.addEventListener('input', updatePreview);
+    }
+});
+</script>
+{% endblock %}

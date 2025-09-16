@@ -1,0 +1,234 @@
+{% extends "base/base.html" %}
+
+{% block title %}Hubungi Kami - {{ site_settings.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('public.index') }}">Beranda</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Hubungi Kami</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Contact Form -->
+            <div class="contact-form">
+                <h1 class="display-5 fw-bold mb-4">Hubungi Kami</h1>
+                <p class="lead mb-4">
+                    Kami siap membantu Anda. Silakan isi formulir di bawah ini atau hubungi kami melalui 
+                    informasi kontak yang tersedia.
+                </p>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form id="contact-form" method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control") }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control") }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.phone.label(class="form-label") }}
+                            {{ form.phone(class="form-control") }}
+                            {% if form.phone.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.phone.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.subject.label(class="form-label") }}
+                            {{ form.subject(class="form-control") }}
+                            {% if form.subject.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.subject.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.message.label(class="form-label") }}
+                        {{ form.message(class="form-control", rows="6") }}
+                        {% if form.message.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.message.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-send"></i> Kirim Pesan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Contact Information -->
+            <div class="contact-info">
+                <h5 class="mb-3">Informasi Kontak</h5>
+                <div class="card">
+                    <div class="card-body">
+                        {% if site_settings.address %}
+                        <div class="contact-item mb-4">
+                            <div class="d-flex align-items-start">
+                                <div class="contact-icon me-3">
+                                    <i class="bi bi-geo-alt fs-4 text-success"></i>
+                                </div>
+                                 <div>
+                                    <h6 class="mb-1">Alamat</h6>
+                                    <p class="text-muted mb-0">{{ site_settings.address }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if site_settings.contact_phone %}
+                        <div class="contact-item mb-4">
+                            <div class="d-flex align-items-start">
+                                <div class="contact-icon me-3">
+                                    <i class="bi bi-telephone fs-4 text-success"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Telepon</h6>
+                                    <p class="text-success mb-0">
+                                        <a href="tel:{{ site_settings.contact_phone }}" class="text-decoration-none">
+                                            {{ site_settings.contact_phone }}
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if site_settings.contact_email %}
+                        <div class="contact-item mb-4">
+                            <div class="d-flex align-items-start">
+                                <div class="contact-icon me-3">
+                                    <i class="bi bi-envelope fs-4 text-info"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Email</h6>
+                                    <p class="text-muted mb-0">
+                                        <a href="mailto:{{ site_settings.contact_email }}" class="text-decoration-none">
+                                            {{ site_settings.contact_email }}
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="contact-item">
+                            <div class="d-flex align-items-start">
+                                <div class="contact-icon me-3">
+                                    <i class="bi bi-clock fs-4 text-warning"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Jam Pelayanan</h6>
+                                    <p class="text-muted mb-0">
+                                        Senin - Jumat: 08:00 - 16:00<br>
+                                        Sabtu: 08:00 - 12:00<br>
+                                        <small class="text-danger">Minggu & Hari Libur: Tutup</small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Response -->
+            <div class="quick-response mt-4">
+                <h5 class="mb-3">Respon Cepat</h5>
+                <div class="card">
+                    <div class="card-body">
+                        <p class="card-text">
+                            <i class="bi bi-clock-history text-primary me-2"></i>
+                            Kami akan merespons pesan Anda dalam waktu <strong>1x24 jam</strong> pada hari kerja.
+                        </p>
+                        <p class="card-text">
+                            <i class="bi bi-shield-check text-success me-2"></i>
+                            Semua informasi yang Anda berikan akan dijaga kerahasiaannya.
+                        </p>
+                        <p class="card-text mb-0">
+                            <i class="bi bi-headset text-info me-2"></i>
+                            Untuk urusan mendesak, silakan hubungi langsung melalui telepon.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Links -->
+            <div class="quick-response mt-4">
+                <h5 class="mb-3">Pertanyaan Umum</h5>
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <h6 class="mb-1">Bagaimana cara mengurus surat keterangan?</h6>
+                        <p class="mb-1 small text-muted">Datang langsung ke kantor desa dengan membawa persyaratan yang diperlukan.</p>
+                    </div>
+                    <div class="list-group-item">
+                        <h6 class="mb-1">Kapan jadwal pelayanan?</h6>
+                        <p class="mb-1 small text-muted">Senin-Jumat: 08:00-16:00, Sabtu: 08:00-12:00</p>
+                    </div>
+                    <div class="list-group-item">
+                        <h6 class="mb-1">Bisakah mengurus secara online?</h6>
+                        <p class="mb-1 small text-muted">Beberapa layanan sudah tersedia online, silakan hubungi kami untuk informasi lebih lanjut.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Make site_settings available to JavaScript
+    window.site_settings = {{ site_settings | tojson }};
+</script>
+{% endblock %}

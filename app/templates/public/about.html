@@ -1,0 +1,186 @@
+{% extends "base/base.html" %}
+
+{% block title %}Tentang Kami - {{ site_settings.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('public.index') }}">Beranda</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Tentang Kami</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- About Content -->
+            <div class="about-content">
+                <h1 class="display-5 fw-bold mb-4">Tentang {{ site_settings.site_name }}</h1>
+                
+                <div class="content-section mb-5">
+                    <h3 class="mb-3">Selamat Datang di Portal Desa Digital</h3>
+                    <p class="lead">
+                        {{ site_settings.site_description or 'Sistem Informasi dan Layanan Desa yang modern dan terintegrasi.' }}
+                    </p>
+                    <p>
+                        Portal Desa Digital adalah platform yang dirancang khusus untuk memfasilitasi komunikasi dan pelayanan 
+                        antara pemerintah desa dengan masyarakat. Melalui portal ini, kami berkomitmen untuk memberikan 
+                        informasi yang akurat, terkini, dan mudah diakses oleh seluruh warga desa.
+                    </p>
+                </div>
+
+                <div class="content-section mb-5">
+                    <h3 class="mb-3">Visi & Misi</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title text-success">
+                                        <i class="bi bi-eye"></i> Visi
+                                    </h5>
+                                    <p class="card-text">
+                                        Menjadi desa yang maju, mandiri, dan sejahtera melalui pemanfaatan teknologi 
+                                        informasi untuk meningkatkan kualitas pelayanan publik.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title text-success">
+                                        <i class="bi bi-bullseye"></i> Misi
+                                    </h5>
+                                    <ul class="card-text mb-0">
+                                        <li>Memberikan pelayanan publik yang berkualitas</li>
+                                        <li>Meningkatkan transparansi pemerintahan desa</li>
+                                        <li>Memberdayakan masyarakat melalui teknologi</li>
+                                        <li>Mewujudkan good governance di tingkat desa</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-section mb-5">
+                    <h3 class="mb-3">Layanan Kami</h3>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <div class="service-icon mb-3">
+                                    <i class="bi bi-newspaper display-4 text-primary"></i>
+                                </div>
+                                <h5>Informasi Terkini</h5>
+                                <p class="text-muted">Berita dan pengumuman terbaru dari pemerintah desa</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <div class="service-icon mb-3">
+                                    <i class="bi bi-calendar-event display-4 text-success"></i>
+                                </div>
+                                <h5>Agenda Kegiatan</h5>
+                                <p class="text-muted">Jadwal kegiatan dan acara yang akan dilaksanakan</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <div class="service-icon mb-3">
+                                    <i class="bi bi-gear display-4 text-warning"></i>
+                                </div>
+                                <h5>Layanan Publik</h5>
+                                <p class="text-muted">Berbagai layanan administrasi dan pelayanan desa</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-section">
+                    <h3 class="mb-3">Struktur Organisasi</h3>
+                    <p>
+                        Pemerintah desa kami terdiri dari berbagai perangkat desa yang bekerja sama untuk 
+                        memberikan pelayanan terbaik kepada masyarakat. Tim kami berkomitmen untuk terus 
+                        meningkatkan kualitas pelayanan dan pembangunan desa.
+                    </p>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Untuk informasi lebih detail mengenai struktur organisasi dan profil perangkat desa, 
+                        silakan hubungi kantor desa atau kunjungi langsung kantor desa.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Contact Info -->
+            <div class="contact-info-widget">
+                <h5 class="mb-3">Informasi Kontak</h5>
+                <div class="card">
+                    <div class="card-body">
+                        {% if site_settings.address %}
+                        <div class="contact-item mb-3">
+                            <i class="bi bi-geo-alt text-primary me-2"></i>
+                            <strong>Alamat:</strong><br>
+                            <span class="ms-4">{{ site_settings.address }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if site_settings.contact_phone %}
+                        <div class="contact-item mb-3">
+                            <i class="bi bi-telephone text-success me-2"></i>
+                            <strong>Telepon:</strong><br>
+                            <span class="ms-4">{{ site_settings.contact_phone }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if site_settings.contact_email %}
+                        <div class="contact-item mb-3">
+                            <i class="bi bi-envelope text-info me-2"></i>
+                            <strong>Email:</strong><br>
+                            <span class="ms-4">{{ site_settings.contact_email }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="contact-item">
+                            <i class="bi bi-clock text-warning me-2"></i>
+                            <strong>Jam Pelayanan:</strong><br>
+                            <span class="d-block ms-4">
+                                Senin - Jumat: 08:00 - 16:00<br>
+                                Sabtu: 08:00 - 12:00<br>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="quick-links-widget mt-4">
+                <h5 class="mb-3">Tautan Cepat</h5>
+                <div class="list-group">
+                    <a href="{{ url_for('public.contact') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-envelope me-2"></i> Hubungi Kami
+                    </a>
+                    <a href="{{ url_for('public.search') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-search me-2"></i> Pencarian
+                    </a>
+                    {% for category in nav_categories %}
+                    <a href="{{ url_for('public.category_content', slug=category.slug) }}" 
+                       class="list-group-item list-group-item-action">
+                        <i class="bi bi-folder me-2"></i> {{ category.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Make site_settings available to JavaScript
+    window.site_settings = {{ site_settings | tojson }};
+</script>
+{% endblock %}

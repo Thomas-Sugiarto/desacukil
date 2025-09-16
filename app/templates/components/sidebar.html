@@ -1,0 +1,211 @@
+<!-- Sidebar Component for Admin/Editor/Publisher -->
+<div class="sidebar bg-white shadow-sm h-100">
+    <div class="sidebar-header p-3 border-bottom">
+        <div class="d-flex align-items-center">
+            <div class="avatar-md me-3">
+                <img src="{{ url_for('static', filename='images/default-avatar.png') }}" 
+                     class="rounded-circle" width="48" height="48" alt="Avatar">
+            </div>
+            <div>
+                <h6 class="mb-0">{{ current_user.full_name }}</h6>
+                <small class="text-muted">{{ current_user.role.name.title() }}</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-menu">
+        <nav class="nav flex-column p-3">
+            {% if current_user.is_admin() %}
+                <!-- Admin Menu -->
+                <div class="nav-section mb-3">
+                    <h6 class="nav-header text-muted text-uppercase small fw-bold mb-2">Dashboard</h6>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.dashboard' }}" 
+                       href="{{ url_for('admin.dashboard') }}">
+                        <i class="bi bi-speedometer2 me-2"></i>Dashboard Admin
+                    </a>
+                </div>
+
+                <div class="nav-section mb-3">
+                    <h6 class="nav-header text-muted text-uppercase small fw-bold mb-2">Manajemen User</h6>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.users' }}" 
+                       href="{{ url_for('admin.users') }}">
+                        <i class="bi bi-people me-2"></i>Kelola User
+                    </a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.roles' }}" 
+                       href="{{ url_for('admin.roles') }}">
+                        <i class="bi bi-shield-check me-2"></i>Kelola Role
+                    </a>
+                </div>
+
+                <div class="nav-section mb-3">
+                    <h6 class="nav-header text-muted text-uppercase small fw-bold mb-2">Konten</h6>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.content' }}" 
+                       href="{{ url_for('admin.content') }}">
+                        <i class="bi bi-file-earmark-text me-2"></i>Semua Konten
+                    </a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.categories' }}" 
+                       href="{{ url_for('admin.categories') }}">
+                        <i class="bi bi-tags me-2"></i>Kategori
+                    </a>
+                </div>
+
+                <div class="nav-section mb-3">
+                    <h6 class="nav-header text-muted text-uppercase small fw-bold mb-2">Sistem</h6>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.settings' }}" 
+                       href="{{ url_for('admin.settings') }}">
+                        <i class="bi bi-gear me-2"></i>Pengaturan
+                    </a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.audit_logs' }}" 
+                       href="{{ url_for('admin.audit_logs') }}">
+                        <i class="bi bi-journal-text me-2"></i>Log Audit
+                    </a>
+                </div>
+
+            {% elif current_user.is_editor() %}
+                <!-- Editor Menu -->
+                <div class="nav-section mb-3">
+                    <h6 class="nav-header text-muted text-uppercase small fw-bold mb-2">Dashboard</h6>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'editor.dashboard' }}" 
+                       href="{{ url_for('editor.dashboard') }}">
+                        <i class="bi bi-speedometer2 me-2"></i>Dashboard Editor
+                    </a>
+                </div>
+
+                <div class="nav-section mb-3">
+                    <h6 class="nav-header text-muted text-uppercase small fw-bold mb-2">Review Konten</h6>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'editor.review_queue' }}" 
+                       href="{{ url_for('editor.review_queue') }}">
+                        <i class="bi bi-list-check me-2"></i>Antrian Review
+                        {% set pending_count = get_pending_review_count() %}
+                        {% if pending_count > 0 %}
+                            <span class="badge bg-warning text-dark ms-auto">{{ pending_count }}</span>
+                        {% endif %}
+                    </a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'editor.review_history' }}" 
+                       href="{{ url_for('editor.review_history') }}">
+                        <i class="bi bi-clock-history me-2"></i>Riwayat Review
+                    </a>
+                </div>
+
+                <div class="nav-section mb-3">
+                    <h6 class="nav-header text-muted text-uppercase small fw-bold mb-2">Konten</h6>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'editor.content_list' }}" 
+                       href="{{ url_for('editor.content_list') }}">
+                        <i class="bi bi-file-earmark-text me-2"></i>Semua Konten
+                    </a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'editor.published_content' }}" 
+                       href="{{ url_for('editor.published_content') }}">
+                        <i class="bi bi-check-circle me-2"></i>Konten Terbit
+                    </a>
+                </div>
+
+            {% elif current_user.is_publisher() %}
+                <!-- Publisher Menu -->
+                <div class="nav-section mb-3">
+                    <h6 class="nav-header text-muted text-uppercase small fw-bold mb-2">Dashboard</h6>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'publisher.dashboard' }}" 
+                       href="{{ url_for('publisher.dashboard') }}">
+                        <i class="bi bi-speedometer2 me-2"></i>Dashboard Publisher
+                    </a>
+                </div>
+
+                <div class="nav-section mb-3">
+                    <h6 class="nav-header text-muted text-uppercase small fw-bold mb-2">Konten Saya</h6>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'publisher.content_new' }}" 
+                       href="{{ url_for('publisher.content_new') }}">
+                        <i class="bi bi-plus-circle me-2"></i>Buat Konten Baru
+                    </a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'publisher.content_list' }}" 
+                       href="{{ url_for('publisher.content_list') }}">
+                        <i class="bi bi-file-earmark-text me-2"></i>Konten Saya
+                    </a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'publisher.drafts' }}" 
+                       href="{{ url_for('publisher.drafts') }}">
+                        <i class="bi bi-file-earmark me-2"></i>Draft
+                        {% set draft_count = get_user_draft_count() %}
+                        {% if draft_count > 0 %}
+                            <span class="badge bg-secondary ms-auto">{{ draft_count }}</span>
+                        {% endif %}
+                    </a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'publisher.pending' }}" 
+                       href="{{ url_for('publisher.pending') }}">
+                        <i class="bi bi-clock me-2"></i>Menunggu Review
+                    </a>
+                </div>
+            {% endif %}
+
+            <!-- Common menu items -->
+            <div class="nav-section mb-3">
+                <h6 class="nav-header text-muted text-uppercase small fw-bold mb-2">Website</h6>
+                <a class="nav-link" href="{{ url_for('public.index') }}" target="_blank">
+                    <i class="bi bi-globe me-2"></i>Lihat Website
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Sidebar footer -->
+    <div class="sidebar-footer mt-auto p-3 border-top">
+        <div class="d-grid gap-2">
+            <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-person me-1"></i>Profil
+            </a>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-box-arrow-right me-1"></i>Logout
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.sidebar {
+    min-height: 100vh;
+    width: 280px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar .nav-link {
+    color: #6c757d;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 0.25rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.sidebar .nav-link:hover {
+    color: #198754;
+    background-color: #f8f9fa;
+}
+
+.sidebar .nav-link.active {
+    color: #198754;
+    background-color: #d1e7dd;
+    font-weight: 500;
+}
+
+.sidebar .nav-header {
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.sidebar-menu {
+    flex: 1;
+    overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+}
+</style>

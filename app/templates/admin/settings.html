@@ -1,0 +1,194 @@
+{% extends "base/dashboard.html" %}
+
+{% block title %}Pengaturan - {{ site_settings.site_name or 'Portal Desa Digital' }}{% endblock %}
+
+{% block sidebar %}
+<ul class="nav flex-column">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+            <i class="bi bi-speedometer2"></i>
+            Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.users') }}">
+            <i class="bi bi-people"></i>
+            Kelola User
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.content_list') }}">
+            <i class="bi bi-file-earmark-text"></i>
+            Kelola Konten
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.categories') }}">
+            <i class="bi bi-tags"></i>
+            Kategori
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="{{ url_for('admin.settings') }}">
+            <i class="bi bi-gear"></i>
+            Pengaturan
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.audit_logs') }}">
+            <i class="bi bi-clock-history"></i>
+            Log Audit
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block page_title %}Pengaturan Sistem{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">Pengaturan Website</h6>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.site_name.label(class="form-label") }}
+                        {{ form.site_name(class="form-control") }}
+                        {% if form.site_name.errors %}
+                        <div class="text-danger">
+                            {% for error in form.site_name.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.contact_email.label(class="form-label") }}
+                        {{ form.contact_email(class="form-control") }}
+                        {% if form.contact_email.errors %}
+                        <div class="text-danger">
+                            {% for error in form.contact_email.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                {{ form.site_description.label(class="form-label") }}
+                {{ form.site_description(class="form-control", rows="3") }}
+                {% if form.site_description.errors %}
+                <div class="text-danger">
+                    {% for error in form.site_description.errors %}
+                    <small>{{ error }}</small>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.contact_phone.label(class="form-label") }}
+                        {{ form.contact_phone(class="form-control") }}
+                        {% if form.contact_phone.errors %}
+                        <div class="text-danger">
+                            {% for error in form.contact_phone.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.address.label(class="form-label") }}
+                        {{ form.address(class="form-control") }}
+                        {% if form.address.errors %}
+                        <div class="text-danger">
+                            {% for error in form.address.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Kembali
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>
+                    Simpan Pengaturan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Additional Settings Cards -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-info">Informasi Sistem</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Versi Sistem:</strong></td>
+                        <td>1.0.0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Database:</strong></td>
+                        <td>PostgreSQL</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Framework:</strong></td>
+                        <td>Flask</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status:</strong></td>
+                        <td><span class="badge bg-success">Aktif</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-warning">Maintenance</h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Fitur maintenance dan backup akan tersedia pada versi selanjutnya.</p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-warning" disabled>
+                        <i class="bi bi-tools me-1"></i>
+                        Mode Maintenance
+                    </button>
+                    <button class="btn btn-outline-info" disabled>
+                        <i class="bi bi-download me-1"></i>
+                        Backup Database
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

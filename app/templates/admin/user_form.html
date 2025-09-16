@@ -1,0 +1,241 @@
+{% extends "base/dashboard.html" %}
+
+{% block title %}{{ title }} - {{ site_settings.site_name or 'Portal Desa Digital' }}{% endblock %}
+
+{% block sidebar %}
+<ul class="nav flex-column">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+            <i class="bi bi-speedometer2"></i>
+            Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="{{ url_for('admin.users') }}">
+            <i class="bi bi-people"></i>
+            Kelola User
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.content_list') }}">
+            <i class="bi bi-file-earmark-text"></i>
+            Kelola Konten
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.categories') }}">
+            <i class="bi bi-tags"></i>
+            Kategori
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.settings') }}">
+            <i class="bi bi-gear"></i>
+            Pengaturan
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.audit_logs') }}">
+            <i class="bi bi-clock-history"></i>
+            Log Audit
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">{{ title }}</h6>
+    </div>
+    <div class="card-body">
+        <!-- Display form errors if any -->
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Terdapat kesalahan pada form:</strong>
+            <ul class="mb-0">
+                {% for field, errors in form.errors.items() %}
+                    {% for error in errors %}
+                    <li>{{ form[field].label.text }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <form method="POST" id="userForm">
+            {{ form.hidden_tag() }}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
+                        {% if form.username.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.username.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                        {% if form.email.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.email.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.full_name.label(class="form-label") }}
+                        {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else "")) }}
+                        {% if form.full_name.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.full_name.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.phone.label(class="form-label") }}
+                        {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else "")) }}
+                        {% if form.phone.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.phone.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                {{ form.bio.label(class="form-label") }}
+                {{ form.bio(class="form-control" + (" is-invalid" if form.bio.errors else ""), rows="3") }}
+                {% if form.bio.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.bio.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.role_id.label(class="form-label") }}
+                        {{ form.role_id(class="form-select" + (" is-invalid" if form.role_id.errors else "")) }}
+                        {% if form.role_id.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.role_id.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.status.label(class="form-label") }}
+                        {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                        {% if form.status.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.status.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+                        {% if form.password.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.password.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if user %}
+                        <small class="text-muted">Kosongkan jika tidak ingin mengubah password</small>
+                        {% else %}
+                        <small class="text-muted">Kosongkan untuk menggunakan password default: password123</small>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.password2.label(class="form-label") }}
+                        {{ form.password2(class="form-control" + (" is-invalid" if form.password2.errors else "")) }}
+                        {% if form.password2.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.password2.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted">Ulangi password yang sama</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Kembali
+                </a>
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <i class="bi bi-check-lg me-1"></i>
+                    <span id="submitText">Simpan</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('userForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    submitText.textContent = 'Menyimpan...';
+    
+    // Re-enable button after 10 seconds as fallback
+    setTimeout(function() {
+        submitBtn.disabled = false;
+        submitText.textContent = 'Simpan';
+    }, 10000);
+});
+</script>
+{% endblock %}

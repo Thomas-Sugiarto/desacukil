@@ -1,0 +1,274 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ content.title }} - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Detail Konten</h2>
+    <div>
+        <a href="{{ url_for('admin.content_list') }}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Kembali
+        </a>
+        <a href="{{ url_for('admin.edit_content', id=content.id) }}" class="btn btn-primary">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <!-- Content Header -->
+                <div class="mb-4">
+                    <h1 class="h3">{{ content.title }}</h1>
+                    <div class="d-flex align-items-center text-muted small mb-3">
+                        <span class="me-3">
+                            <i class="bi bi-person"></i> {{ content.author.full_name if content.author else 'N/A' }}
+                        </span>
+                        <span class="me-3">
+                            <i class="bi bi-calendar"></i> 
+                            {% if content.published_at and content.status == 'published' %}
+                                {{ content.published_at|datetime }}
+                            {% else %}
+                                {{ content.created_at|datetime }}
+                            {% endif %}
+                        </span>
+                        <span class="me-3">
+                            <i class="bi bi-eye"></i> {{ content.view_count }} views
+                        </span>
+                        <span class="badge bg-{{ content.status|status_badge }}">
+                            {{ content.status|status_text }}
+                        </span>
+                    </div>
+                    
+                    {% if content.category %}
+                    <div class="mb-3">
+                        <span class="badge" style="background-color: {{ content.category.color }}">
+                            <i class="bi bi-tag"></i> {{ content.category.name }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Cover Image -->
+                {% if content.cover_image %}
+                <div class="mb-4">
+                    <img src="{{ get_file_url(content.cover_image) }}" alt="{{ content.title }}" class="img-fluid rounded">
+                </div>
+                {% endif %}
+                
+                <!-- Excerpt -->
+                {% if content.excerpt %}
+                <div class="mb-4">
+                    <div class="alert alert-light">
+                        <strong>Ringkasan:</strong> {{ content.excerpt }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- YouTube Video -->
+                {% if content.youtube_url %}
+                <div class="mb-4">
+                    <div class="ratio ratio-16x9">
+                        <iframe src="{{ get_youtube_embed_url(content.youtube_url) }}" allowfullscreen></iframe>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Content -->
+                <div class="content-body">
+                    {{ content.content|safe }}
+                </div>
+                
+                <!-- Review Comment (if rejected) -->
+                {% if content.status == 'rejected' and content.review_comment %}
+                <div class="mt-4">
+                    <div class="alert alert-danger">
+                        <h6><i class="bi bi-exclamation-triangle"></i> Komentar Review:</h6>
+                        <p class="mb-0">{{ content.review_comment }}</p>
+                        {% if content.reviewer %}
+                        <small class="text-muted">- {{ content.reviewer.full_name }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Content Info -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Informasi Konten</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Status:</strong></td>
+                        <td>
+                            <span class="badge bg-{{ content.status|status_badge }}">
+                                {{ content.status|status_text }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Penulis:</strong></td>
+                        <td>{{ content.author.full_name if content.author else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Kategori:</strong></td>
+                        <td>
+                            {% if content.category %}
+                                <span class="badge" style="background-color: {{ content.category.color }}">
+                                    {{ content.category.name }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">Tidak ada kategori</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dibuat:</strong></td>
+                        <td>{{ content.created_at|datetime }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Diperbarui:</strong></td>
+                        <td>{{ content.updated_at|datetime }}</td>
+                    </tr>
+                    {% if content.published_at %}
+                    <tr>
+                        <td><strong>Dipublikasi:</strong></td>
+                        <td>{{ content.published_at|datetime }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if content.reviewer %}
+                    <tr>
+                        <td><strong>Reviewer:</strong></td>
+                        <td>{{ content.reviewer.full_name }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <td><strong>Views:</strong></td>
+                        <td>{{ content.view_count }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Slug:</strong></td>
+                        <td><code>{{ content.slug }}</code></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Aksi</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('admin.edit_content', id=content.id) }}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-pencil"></i> Edit Konten
+                    </a>
+                    
+                    {% if content.status == 'published' %}
+                    <a href="{{ url_for('public.content_detail', slug=content.slug) }}" class="btn btn-outline-success btn-sm" target="_blank">
+                        <i class="bi bi-eye"></i> Lihat di Website
+                    </a>
+                    {% endif %}
+                    
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteContent()">
+                        <i class="bi bi-trash"></i> Hapus Konten
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content Revisions (if any) -->
+        {% if content.revisions %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Riwayat Revisi</h6>
+            </div>
+            <div class="card-body">
+                {% if revisions %}
+    {% for revision in revisions %}
+        <div class="border-bottom pb-2 mb-2">
+            <small class="text-muted">
+                {{ revision.created_at|datetime }} - {{ revision.reviser.full_name }}
+            </small>
+            {% if revision.revision_notes %}
+                <p class="small mb-0">{{ revision.revision_notes }}</p>
+            {% endif %}
+        </div>
+    {% endfor %}
+{% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function deleteContent() {
+    if (confirm('Hapus konten "{{ content.title }}"? Aksi ini tidak dapat dibatalkan.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ url_for("admin.delete_content", id=content.id) }}';
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrf_token';
+        csrfToken.value = '{{ csrf_token() }}';
+        form.appendChild(csrfToken);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+
+<style>
+.content-body {
+    line-height: 1.6;
+}
+
+.content-body h1, .content-body h2, .content-body h3, 
+.content-body h4, .content-body h5, .content-body h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.content-body p {
+    margin-bottom: 1rem;
+}
+
+.content-body img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+.content-body blockquote {
+    border-left: 4px solid #dee2e6;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+}
+
+.content-body code {
+    background-color: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.content-body pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,246 @@
+<!-- Breadcrumb Component -->
+{% macro render_breadcrumb(items, separator='/', show_home=true) %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            {% if show_home %}
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('public.index') }}" class="text-decoration-none">
+                        <i class="bi bi-house-door"></i>
+                        <span class="d-none d-sm-inline ms-1">Beranda</span>
+                    </a>
+                </li>
+            {% endif %}
+            
+            {% for item in items %}
+                {% if loop.last %}
+                    <li class="breadcrumb-item active" aria-current="page">
+                        {{ item.title }}
+                    </li>
+                {% else %}
+                    <li class="breadcrumb-item">
+                        {% if item.url %}
+                            <a href="{{ item.url }}" class="text-decoration-none">{{ item.title }}</a>
+                        {% else %}
+                            {{ item.title }}
+                        {% endif %}
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+{% endmacro %}
+
+<!-- Admin Breadcrumb -->
+{% macro admin_breadcrumb(current_page, parent_pages=[]) %}
+    {% set items = [] %}
+    {% set _ = items.append({'title': 'Admin Dashboard', 'url': url_for('admin.dashboard')}) %}
+    
+    {% for page in parent_pages %}
+        {% set _ = items.append(page) %}
+    {% endfor %}
+    
+    {% set _ = items.append({'title': current_page}) %}
+    
+    {{ render_breadcrumb(items, show_home=false) }}
+{% endmacro %}
+
+<!-- Editor Breadcrumb -->
+{% macro editor_breadcrumb(current_page, parent_pages=[]) %}
+    {% set items = [] %}
+    {% set _ = items.append({'title': 'Editor Dashboard', 'url': url_for('editor.dashboard')}) %}
+    
+    {% for page in parent_pages %}
+        {% set _ = items.append(page) %}
+    {% endfor %}
+    
+    {% set _ = items.append({'title': current_page}) %}
+    
+    {{ render_breadcrumb(items, show_home=false) }}
+{% endmacro %}
+
+<!-- Publisher Breadcrumb -->
+{% macro publisher_breadcrumb(current_page, parent_pages=[]) %}
+    {% set items = [] %}
+    {% set _ = items.append({'title': 'Publisher Dashboard', 'url': url_for('publisher.dashboard')}) %}
+    
+    {% for page in parent_pages %}
+        {% set _ = items.append(page) %}
+    {% endfor %}
+    
+    {% set _ = items.append({'title': current_page}) %}
+    
+    {{ render_breadcrumb(items, show_home=false) }}
+{% endmacro %}
+
+<!-- Public Breadcrumb -->
+{% macro public_breadcrumb(current_page, category=None, parent_pages=[]) %}
+    {% set items = [] %}
+    
+    {% for page in parent_pages %}
+        {% set _ = items.append(page) %}
+    {% endfor %}
+    
+    {% if category %}
+        {% set _ = items.append({'title': category.name, 'url': url_for('public.category_content', slug=category.slug)}) %}
+    {% endif %}
+    
+    {% set _ = items.append({'title': current_page}) %}
+    
+    {{ render_breadcrumb(items) }}
+{% endmacro %}
+
+<!-- Content Breadcrumb -->
+{% macro content_breadcrumb(content) %}
+    {% set items = [] %}
+    
+    {% if content.category %}
+        {% set _ = items.append({'title': content.category.name, 'url': url_for('public.category_content', slug=content.category.slug)}) %}
+    {% endif %}
+    
+    {% set _ = items.append({'title': content.title}) %}
+    
+    {{ render_breadcrumb(items) }}
+{% endmacro %}
+
+<!-- Search Breadcrumb -->
+{% macro search_breadcrumb(query, category=None) %}
+    {% set items = [] %}
+    {% set _ = items.append({'title': 'Pencarian', 'url': url_for('public.search')}) %}
+    
+    {% if category %}
+        {% set _ = items.append({'title': 'Kategori: ' + category.name}) %}
+    {% endif %}
+    
+    {% if query %}
+        {% set _ = items.append({'title': 'Hasil untuk: "' + query + '"'}) %}
+    {% endif %}
+    
+    {{ render_breadcrumb(items) }}
+{% endmacro %}
+
+<!-- Breadcrumb with Icons -->
+{% macro icon_breadcrumb(items, show_home=true) %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            {% if show_home %}
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('public.index') }}" class="text-decoration-none d-flex align-items-center">
+                        <i class="bi bi-house-door me-1"></i>
+                        <span class="d-none d-sm-inline">Beranda</span>
+                    </a>
+                </li>
+            {% endif %}
+            
+            {% for item in items %}
+                {% if loop.last %}
+                    <li class="breadcrumb-item active d-flex align-items-center" aria-current="page">
+                        {% if item.icon %}
+                            <i class="bi bi-{{ item.icon }} me-1"></i>
+                        {% endif %}
+                        {{ item.title }}
+                    </li>
+                {% else %}
+                    <li class="breadcrumb-item">
+                        {% if item.url %}
+                            <a href="{{ item.url }}" class="text-decoration-none d-flex align-items-center">
+                                {% if item.icon %}
+                                    <i class="bi bi-{{ item.icon }} me-1"></i>
+                                {% endif %}
+                                {{ item.title }}
+                            </a>
+                        {% else %}
+                            <span class="d-flex align-items-center">
+                                {% if item.icon %}
+                                    <i class="bi bi-{{ item.icon }} me-1"></i>
+                                {% endif %}
+                                {{ item.title }}
+                            </span>
+                        {% endif %}
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+{% endmacro %}
+
+<!-- Compact Breadcrumb for Mobile -->
+{% macro compact_breadcrumb(items, show_home=true) %}
+    <nav aria-label="breadcrumb" class="d-md-none">
+        <ol class="breadcrumb">
+            {% if items|length > 1 %}
+                <li class="breadcrumb-item">
+                    <a href="{{ items[-2].url if items[-2].url else 'javascript:history.back()' }}" class="text-decoration-none">
+                        <i class="bi bi-arrow-left me-1"></i>Kembali
+                    </a>
+                </li>
+            {% endif %}
+            <li class="breadcrumb-item active" aria-current="page">
+                {{ items[-1].title }}
+            </li>
+        </ol>
+    </nav>
+    
+    <!-- Full breadcrumb for desktop -->
+    <div class="d-none d-md-block">
+        {{ render_breadcrumb(items, show_home=show_home) }}
+    </div>
+{% endmacro %}
+
+<!-- Breadcrumb with Actions -->
+{% macro breadcrumb_with_actions(items, actions=[], show_home=true) %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="flex-grow-1">
+            {{ render_breadcrumb(items, show_home=show_home) }}
+        </div>
+        
+        {% if actions %}
+            <div class="ms-3">
+                {% for action in actions %}
+                    <a href="{{ action.url }}" class="btn btn-{{ action.class or 'primary' }} btn-sm me-1">
+                        {% if action.icon %}
+                            <i class="bi bi-{{ action.icon }} me-1"></i>
+                        {% endif %}
+                        {{ action.title }}
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+<style>
+.breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: var(--bs-breadcrumb-divider, "/");
+    color: #6c757d;
+}
+
+.breadcrumb-item.active {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.breadcrumb-item a {
+    color: #198754;
+}
+
+.breadcrumb-item a:hover {
+    color: #146c43;
+    text-decoration: underline !important;
+}
+
+@media (max-width: 576px) {
+    .breadcrumb-item {
+        font-size: 0.875rem;
+    }
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        margin: 0 0.25rem;
+    }
+}
+</style>

@@ -1,0 +1,418 @@
+{% extends "base/dashboard.html" %}
+{% from "components/alerts.html" import render_flash_messages, status_badge %}
+{% from "components/breadcrumb.html" import editor_breadcrumb %}
+
+{% block title %}{{ content.title }} - Detail Konten - Editor{% endblock %}
+
+{% block breadcrumb %}
+    {{ editor_breadcrumb('Detail Konten', content.title) }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Flash Messages -->
+    {{ render_flash_messages() }}
+    
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Detail Konten</h2>
+            <p class="text-muted mb-0">Lihat dan kelola detail konten</p>
+        </div>
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('editor.content_list') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Kembali
+            </a>
+            {% if content.status == 'pending_review' %}
+                <a href="{{ url_for('editor.review_content', id=content.id) }}" class="btn btn-warning">
+                    <i class="bi bi-pencil-square me-1"></i>Review
+                </a>
+            {% endif %}
+            <a href="{{ url_for('editor.edit_content', id=content.id) }}" class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i>Edit
+            </a>
+            <a href="{{ url_for('public.content_detail', slug=content.slug) }}" class="btn btn-info" target="_blank">
+                <i class="bi bi-eye me-1"></i>Lihat Publik
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <!-- Status and Category Badges -->
+                    <div class="mb-3">
+                        {{ status_badge(content.status) }}
+                        {% if content.category %}
+                            <span class="badge ms-2" style="background-color: {{ content.category.color }};">
+                                {{ content.category.name }}
+                            </span>
+                        {% endif %}
+                        {% if content.youtube_url %}
+                            <span class="badge bg-info ms-2">
+                                <i class="bi bi-play-circle me-1"></i>Video
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Title -->
+                    <h1 class="h3 mb-3">{{ content.title }}</h1>
+                    
+                    <!-- Cover Image -->
+                    {% if content.cover_image %}
+                    <div class="mb-4">
+                        <img src="{{ url_for('static', filename='uploads/' + content.cover_image) }}" 
+                             alt="Cover Image" class="img-fluid rounded shadow-sm">
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Excerpt -->
+                    {% if content.excerpt %}
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-2">
+                            <i class="bi bi-quote me-2"></i>Ringkasan
+                        </h5>
+                        <div class="bg-light rounded p-3">
+                            <p class="mb-0 fst-italic">{{ content.excerpt }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Content Body -->
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-3">
+                            <i class="bi bi-file-text me-2"></i>Konten
+                        </h5>
+                        <div class="content-body border rounded p-4 bg-white">
+                            {{ content.content|safe }}
+                        </div>
+                    </div>
+                    
+                    <!-- YouTube Video -->
+                    {% if content.youtube_url %}
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-3">
+                            <i class="bi bi-play-circle me-2"></i>Video YouTube
+                        </h5>
+                        {% set video_id = content.youtube_url.split('/')[-1].split('?')[0] %}
+                        {% if 'youtube.com/watch?v=' in content.youtube_url %}
+                            {% set video_id = content.youtube_url.split('v=')[1].split('&')[0] %}
+                        {% elif 'youtu.be/' in content.youtube_url %}
+                            {% set video_id = content.youtube_url.split('youtu.be/')[1].split('?')[0] %}
+                        {% endif %}
+                        <div class="ratio ratio-16x9">
+                            <iframe src="https://www.youtube.com/embed/{{ video_id }}" 
+                                    allowfullscreen class="rounded"></iframe>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="bi bi-link me-1"></i>
+                                <a href="{{ content.youtube_url }}" target="_blank" class="text-decoration-none">
+                                    {{ content.youtube_url }}
+                                </a>
+                            </small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Review Comments (if any) -->
+            {% if content.review_comment %}
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-warning bg-opacity-10 border-0">
+                    <h6 class="mb-0 text-warning">
+                        <i class="bi bi-chat-square-text me-2"></i>
+                        Komentar Review
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-2">
+                                <i class="bi bi-person text-warning"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="bg-light rounded p-3">
+                                <p class="mb-2">{{ content.review_comment }}</p>
+                                {% if content.reviewer %}
+                                    <small class="text-muted">
+                                        oleh {{ content.reviewer.full_name }} • 
+                                        {{ content.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                                    </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Content Information -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Informasi Konten
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label text-muted small">Status</label>
+                            <div>{{ status_badge(content.status) }}</div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label text-muted small">Kategori</label>
+                            <div>
+                                {% if content.category %}
+                                    <span class="badge" style="background-color: {{ content.category.color }};">
+                                        {{ content.category.name }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">Tidak ada kategori</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-6">
+                            <label class="form-label text-muted small">Penulis</label>
+                            <div class="d-flex align-items-center">
+                                <img src="{{ url_for('static', filename='images/default-avatar.png') }}" 
+                                     class="rounded-circle me-2" width="24" height="24">
+                                <div>
+                                    <div class="fw-medium small">{{ content.author.full_name }}</div>
+                                    <small class="text-muted">{{ content.author.role.name.title() }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-6">
+                            <label class="form-label text-muted small">Views</label>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-eye text-primary me-1"></i>
+                                <span class="fw-medium">{{ content.view_count }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-6">
+                            <label class="form-label text-muted small">Dibuat</label>
+                            <div class="small">
+                                <div>{{ content.created_at.strftime('%d/%m/%Y') }}</div>
+                                <div class="text-muted">{{ content.created_at.strftime('%H:%M') }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-6">
+                            <label class="form-label text-muted small">Diperbarui</label>
+                            <div class="small">
+                                <div>{{ content.updated_at.strftime('%d/%m/%Y') }}</div>
+                                <div class="text-muted">{{ content.updated_at.strftime('%H:%M') }}</div>
+                            </div>
+                        </div>
+                        
+                        {% if content.published_at %}
+                        <div class="col-12">
+                            <label class="form-label text-muted small">Dipublikasi</label>
+                            <div class="small">
+                                <div>{{ content.published_at.strftime('%d/%m/%Y') }}</div>
+                                <div class="text-muted">{{ content.published_at.strftime('%H:%M') }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if content.reviewer %}
+                        <div class="col-12">
+                            <label class="form-label text-muted small">Reviewer</label>
+                            <div class="d-flex align-items-center">
+                                <img src="{{ url_for('static', filename='images/default-avatar.png') }}" 
+                                     class="rounded-circle me-2" width="24" height="24">
+                                <div>
+                                    <div class="fw-medium small">{{ content.reviewer.full_name }}</div>
+                                    <small class="text-muted">{{ content.reviewer.role.name.title() }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Statistics -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h6 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>
+                        Statistik
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 text-center">
+                        <div class="col-6">
+                            <div class="bg-primary bg-opacity-10 rounded p-3">
+                                <i class="bi bi-file-text text-primary fs-5"></i>
+                                <div class="mt-2">
+                                    <div class="fw-bold">{{ content.content|striptags|length }}</div>
+                                    <small class="text-muted">Karakter</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-success bg-opacity-10 rounded p-3">
+                                <i class="bi bi-chat-text text-success fs-5"></i>
+                                <div class="mt-2">
+                                    <div class="fw-bold">{{ content.content|striptags|wordcount }}</div>
+                                    <small class="text-muted">Kata</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightning me-2"></i>
+                        Aksi Cepat
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if content.status == 'pending_review' %}
+                            <a href="{{ url_for('editor.review_content', id=content.id) }}" class="btn btn-warning">
+                                <i class="bi bi-pencil-square me-2"></i>Review Konten
+                            </a>
+                        {% endif %}
+                        
+                        {% if content.status in ['draft', 'rejected'] %}
+                            <button type="button" class="btn btn-success" onclick="publishContent({{ content.id }})">
+                                <i class="bi bi-check-circle me-2"></i>Publikasikan
+                            </button>
+                        {% elif content.status == 'published' %}
+                            <button type="button" class="btn btn-warning" onclick="unpublishContent({{ content.id }})">
+                                <i class="bi bi-pause-circle me-2"></i>Batalkan Publikasi
+                            </button>
+                        {% endif %}
+                        
+                        <a href="{{ url_for('editor.edit_content', id=content.id) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil me-2"></i>Edit Konten
+                        </a>
+                        
+                        <button type="button" class="btn btn-outline-danger" 
+                                onclick="deleteContent({{ content.id }}, '{{ content.title|replace("'", "\\'") }}')">
+                            <i class="bi bi-trash me-2"></i>Hapus Konten
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function publishContent(contentId) {
+    if (confirm('Publikasikan konten ini?')) {
+        $.ajax({
+            url: `/editor/content/${contentId}/publish`,
+            type: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': $('meta[name=csrf-token]').attr('content')
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert(response.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat mempublikasi konten');
+            }
+        });
+    }
+}
+
+function unpublishContent(contentId) {
+    if (confirm('Batalkan publikasi konten ini?')) {
+        $.ajax({
+            url: `/editor/content/${contentId}/unpublish`,
+            type: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': $('meta[name=csrf-token]').attr('content')
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert(response.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat membatalkan publikasi');
+            }
+        });
+    }
+}
+
+function deleteContent(contentId, title) {
+    if (confirm(`Hapus konten "${title}"? Aksi ini tidak dapat dibatalkan.`)) {
+        $.ajax({
+            url: `/editor/content/${contentId}/delete`,
+            type: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': $('meta[name=csrf-token]').attr('content')
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert(response.message);
+                    window.location.href = '{{ url_for("editor.content_list") }}';
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menghapus konten');
+            }
+        });
+    }
+}
+
+// Auto-save scroll position
+$(window).on('beforeunload', function() {
+    sessionStorage.setItem('scrollPosition', $(window).scrollTop());
+});
+
+$(document).ready(function() {
+    // Restore scroll position
+    const scrollPosition = sessionStorage.getItem('scrollPosition');
+    if (scrollPosition) {
+        $(window).scrollTop(scrollPosition);
+        sessionStorage.removeItem('scrollPosition');
+    }
+    
+    // Add syntax highlighting for code blocks if any
+    $('pre code').each(function() {
+        $(this).addClass('language-javascript');
+    });
+});
+</script>
+{% endblock %}

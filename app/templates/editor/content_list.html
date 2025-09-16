@@ -1,0 +1,465 @@
+{% extends "base/dashboard.html" %}
+{% from "components/alerts.html" import render_flash_messages, status_badge %}
+{% from "components/breadcrumb.html" import editor_breadcrumb %}
+{% from "components/pagination.html" import render_pagination %}
+
+{% block title %}Daftar Konten - Editor - {{ site_settings.site_name }}{% endblock %}
+
+{% block breadcrumb %}
+    {{ editor_breadcrumb('Daftar Konten') }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Flash Messages -->
+    {{ render_flash_messages() }}
+    
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Daftar Konten</h2>
+            <p class="text-muted mb-0">Kelola semua konten dalam sistem</p>
+        </div>
+        <div>
+            <a href="{{ url_for('editor.review_queue') }}" class="btn btn-warning">
+                <i class="bi bi-clock me-1"></i>
+                Antrian Review
+                {% if pending_count > 0 %}
+                    <span class="badge bg-light text-dark ms-1">{{ pending_count }}</span>
+                {% endif %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Cari Konten</label>
+                    <input type="text" class="form-control" name="search" 
+                           value="{{ request.args.get('search', '') }}" 
+                           placeholder="Judul, konten, atau penulis...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" name="status">
+                        <option value="">Semua Status</option>
+                        <option value="draft" {{ 'selected' if request.args.get('status') == 'draft' }}>Draft</option>
+                        <option value="pending_review" {{ 'selected' if request.args.get('status') == 'pending_review' }}>Menunggu Review</option>
+                        <option value="published" {{ 'selected' if request.args.get('status') == 'published' }}>Dipublikasi</option>
+                        <option value="rejected" {{ 'selected' if request.args.get('status') == 'rejected' }}>Ditolak</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Kategori</label>
+                    <select class="form-select" name="category">
+                        <option value="">Semua Kategori</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}" {{ 'selected' if request.args.get('category')|int == category.id }}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Penulis</label>
+                    <select class="form-select" name="author">
+                        <option value="">Semua Penulis</option>
+                        {% for author in authors %}
+                            <option value="{{ author.id }}" {{ 'selected' if request.args.get('author')|int == author.id }}>
+                                {{ author.full_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Urutkan</label>
+                    <select class="form-select" name="sort">
+                        <option value="newest" {{ 'selected' if request.args.get('sort') == 'newest' }}>Terbaru</option>
+                        <option value="oldest" {{ 'selected' if request.args.get('sort') == 'oldest' }}>Terlama</option>
+                        <option value="title" {{ 'selected' if request.args.get('sort') == 'title' }}>Judul A-Z</option>
+                        <option value="author" {{ 'selected' if request.args.get('sort') == 'author' }}>Penulis A-Z</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Content List -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    Daftar Konten ({{ content.total }} konten)
+                </h5>
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="view" id="list-view" checked>
+                    <label class="btn btn-outline-secondary btn-sm" for="list-view">
+                        <i class="bi bi-list"></i>
+                    </label>
+                    <input type="radio" class="btn-check" name="view" id="grid-view">
+                    <label class="btn btn-outline-secondary btn-sm" for="grid-view">
+                        <i class="bi bi-grid"></i>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if content.items %}
+                <!-- List View -->
+                <div id="list-content" class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="5%">
+                                    <input type="checkbox" class="form-check-input" id="select-all">
+                                </th>
+                                <th width="40%">Konten</th>
+                                <th width="15%">Penulis</th>
+                                <th width="10%">Kategori</th>
+                                <th width="10%">Status</th>
+                                <th width="10%">Tanggal</th>
+                                <th width="10%">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in content.items %}
+                            <tr data-status="{{ item.status }}">
+                                <td>
+                                    <input type="checkbox" class="form-check-input content-checkbox" value="{{ item.id }}">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0 me-3">
+                                            {% if item.cover_image %}
+                                                <img src="{{ url_for('static', filename='uploads/' + item.cover_image) }}" 
+                                                     class="rounded" width="60" height="45" style="object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                                     style="width: 60px; height: 45px;">
+                                                    <i class="bi bi-file-earmark-text text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                <a href="{{ url_for('public.content_detail', slug=item.slug) }}" 
+                                                   class="text-decoration-none" target="_blank">
+                                                    {{ item.title }}
+                                                </a>
+                                            </h6>
+                                            <p class="text-muted mb-1 small">{{ item.excerpt|truncate(80) }}</p>
+                                            <div class="d-flex align-items-center small text-muted">
+                                                <i class="bi bi-eye me-1"></i>{{ item.view_count }} views
+                                                {% if item.youtube_url %}
+                                                    <i class="bi bi-play-circle ms-2 me-1"></i>Video
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ url_for('static', filename='images/default-avatar.png') }}" 
+                                             class="rounded-circle me-2" width="32" height="32">
+                                        <div>
+                                            <div class="fw-medium">{{ item.author.full_name }}</div>
+                                            <small class="text-muted">{{ item.author.role.name.title() }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if item.category %}
+                                        <span class="badge" style="background-color: {{ item.category.color }};">
+                                            {{ item.category.name }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ status_badge(item.status) }}</td>
+                                <td>
+                                    <div class="small">
+                                        <div>{{ item.created_at.strftime('%d/%m/%Y') }}</div>
+                                        <div class="text-muted">{{ item.created_at.strftime('%H:%M') }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('public.content_detail', slug=item.slug) }}" 
+                                           class="btn btn-outline-primary" target="_blank" title="Lihat">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if item.status == 'pending_review' %}
+                                            <a href="{{ url_for('editor.content_review', id=item.id) }}" 
+                                               class="btn btn-outline-warning" title="Review">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if current_user.has_permission('content', 'delete') %}
+                                            <button type="button" class="btn btn-outline-danger" 
+                                                    onclick="deleteContent({{ item.id }}, '{{ item.title|replace("'", "\\'") }}')" title="Hapus">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Grid View (Hidden by default) -->
+                <div id="grid-content" class="row g-3 p-3" style="display: none;">
+                    {% for item in content.items %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 content-card" data-status="{{ item.status }}">
+                            {% if item.cover_image %}
+                                <img src="{{ url_for('static', filename='uploads/' + item.cover_image) }}" 
+                                     class="card-img-top" style="height: 200px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                                     style="height: 200px;">
+                                    <i class="bi bi-file-earmark-text text-muted display-4"></i>
+                                </div>
+                            {% endif %}
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    {{ status_badge(item.status) }}
+                                    <input type="checkbox" class="form-check-input content-checkbox" value="{{ item.id }}">
+                                </div>
+                                <h6 class="card-title">
+                                    <a href="{{ url_for('public.content_detail', slug=item.slug) }}" 
+                                       class="text-decoration-none" target="_blank">
+                                        {{ item.title|truncate(50) }}
+                                    </a>
+                                </h6>
+                                <p class="card-text text-muted small">{{ item.excerpt|truncate(100) }}</p>
+                                <div class="d-flex justify-content-between align-items-center small text-muted">
+                                    <span>{{ item.author.full_name }}</span>
+                                    <span>{{ item.created_at.strftime('%d/%m/%Y') }}</span>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="btn-group w-100" role="group">
+                                    <a href="{{ url_for('public.content_detail', slug=item.slug) }}" 
+                                       class="btn btn-outline-primary btn-sm" target="_blank">
+                                        <i class="bi bi-eye me-1"></i>Lihat
+                                    </a>
+                                    {% if item.status == 'pending_review' %}
+                                        <a href="{{ url_for('editor.content_review', id=item.id) }}" 
+                                           class="btn btn-outline-warning btn-sm">
+                                            <i class="bi bi-pencil-square me-1"></i>Review
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Bulk Actions -->
+                <div id="bulk-actions" class="card-footer bg-light border-0" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">
+                            <span id="selected-count">0</span> konten dipilih
+                        </span>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-success btn-sm bulk-action" data-action="publish">
+                                <i class="bi bi-check-circle me-1"></i>Publikasikan
+                            </button>
+                            <button type="button" class="btn btn-warning btn-sm bulk-action" data-action="unpublish">
+                                <i class="bi bi-pause-circle me-1"></i>Batalkan Publikasi
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm bulk-action" data-action="delete">
+                                <i class="bi bi-trash me-1"></i>Hapus
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-file-earmark-text display-1 text-muted mb-3"></i>
+                    <h5 class="text-muted">Tidak ada konten ditemukan</h5>
+                    <p class="text-muted">Coba ubah filter pencarian atau buat konten baru</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if content.pages > 1 %}
+        <div class="mt-4">
+            {{ render_pagination(content, 'editor.content_list', 
+                                search=request.args.get('search'),
+                                status=request.args.get('status'),
+                                category=request.args.get('category'),
+                                author=request.args.get('author'),
+                                sort=request.args.get('sort')) }}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // View toggle
+    $('#list-view').on('change', function() {
+        if ($(this).is(':checked')) {
+            $('#list-content').show();
+            $('#grid-content').hide();
+        }
+    });
+    
+    $('#grid-view').on('change', function() {
+        if ($(this).is(':checked')) {
+            $('#list-content').hide();
+            $('#grid-content').show();
+        }
+    });
+    
+    // Select all functionality
+    $('#select-all').on('change', function() {
+        $('.content-checkbox').prop('checked', $(this).is(':checked'));
+        updateBulkActions();
+    });
+    
+    $('.content-checkbox').on('change', function() {
+        updateBulkActions();
+    });
+    
+    function updateBulkActions() {
+        const checkedCount = $('.content-checkbox:checked').length;
+        if (checkedCount > 0) {
+            $('#bulk-actions').show();
+            $('#selected-count').text(checkedCount);
+        } else {
+            $('#bulk-actions').hide();
+        }
+    }
+    
+    // Bulk actions
+    $('.bulk-action').on('click', function() {
+        const action = $(this).data('action');
+        const selectedIds = $('.content-checkbox:checked').map(function() {
+            return $(this).val();
+        }).get();
+        
+        if (selectedIds.length === 0) {
+            alert('Pilih konten terlebih dahulu');
+            return;
+        }
+        
+        const actionText = {
+            'publish': 'publikasikan',
+            'unpublish': 'batalkan publikasi',
+            'delete': 'hapus'
+        };
+        
+        if (confirm(`Apakah Anda yakin ingin ${actionText[action]} ${selectedIds.length} konten?`)) {
+            performBulkAction(action, selectedIds);
+        }
+    });
+    
+    function performBulkAction(action, ids) {
+        $.ajax({
+            url: '{{ url_for("editor.bulk_action") }}',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                action: action,
+                content_ids: ids
+            }),
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('Terjadi kesalahan: ' + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('Error details:', xhr.responseText);
+                alert('Terjadi kesalahan saat memproses aksi: ' + error);
+            }
+        });
+    }
+});
+
+function deleteContent(id, title) {
+    if (confirm(`Apakah Anda yakin ingin menghapus konten "${title}"?`)) {
+        // Get CSRF token from meta tag or global setup
+        const csrfToken = $('meta[name=csrf-token]').attr('content');
+        
+        console.log('Delete Content Debug:');
+        console.log('- Content ID:', id);
+        console.log('- CSRF Token available:', csrfToken ? 'Yes' : 'No');
+        
+        if (!csrfToken) {
+            alert('CSRF token tidak ditemukan. Silakan refresh halaman dan coba lagi.');
+            return;
+        }
+        
+        $.ajax({
+            url: `/editor/content/${id}/delete`,
+            type: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            data: JSON.stringify({
+                content_id: id
+            }),
+            beforeSend: function(xhr) {
+                console.log('Request headers:', xhr.getAllResponseHeaders());
+                console.log('Sending CSRF token:', csrfToken.substring(0, 10) + '...');
+            },
+            success: function(response) {
+                console.log('Delete success:', response);
+                if (response.success) {
+                    alert(response.message);
+                    location.reload();
+                } else {
+                    alert('Gagal menghapus konten: ' + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('Delete error details:');
+                console.log('- Status:', xhr.status);
+                console.log('- Response:', xhr.responseText);
+                console.log('- Error:', error);
+                
+                let errorMessage = 'Terjadi kesalahan saat menghapus konten';
+                
+                if (xhr.status === 400) {
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage += ': ' + xhr.responseJSON.message;
+                    } else {
+                        errorMessage += ': Bad Request - Periksa CSRF token';
+                    }
+                } else if (xhr.status === 403) {
+                    errorMessage += ': Akses ditolak';
+                } else if (xhr.status === 404) {
+                    errorMessage += ': Konten tidak ditemukan';
+                } else {
+                    errorMessage += ': ' + error;
+                }
+                
+                alert(errorMessage);
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

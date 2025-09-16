@@ -1,0 +1,248 @@
+{% extends "base/dashboard.html" %}
+
+{% block title %}Log Audit - {{ site_settings.site_name or 'Portal Desa Digital' }}{% endblock %}
+
+{% block sidebar %}
+<ul class="nav flex-column">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+            <i class="bi bi-speedometer2"></i>
+            Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.users') }}">
+            <i class="bi bi-people"></i>
+            Kelola User
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.content_list') }}">
+            <i class="bi bi-file-earmark-text"></i>
+            Kelola Konten
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.categories') }}">
+            <i class="bi bi-tags"></i>
+            Kategori
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.settings') }}">
+            <i class="bi bi-gear"></i>
+            Pengaturan
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="{{ url_for('admin.audit_logs') }}">
+            <i class="bi bi-clock-history"></i>
+            Log Audit
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block page_title %}Log Audit{% endblock %}
+
+{% block content %}
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <select class="form-select" name="action">
+                    <option value="">Semua Aksi</option>
+                    <option value="create" {% if action_filter == 'create' %}selected{% endif %}>Create</option>
+                    <option value="update" {% if action_filter == 'update' %}selected{% endif %}>Update</option>
+                    <option value="delete" {% if action_filter == 'delete' %}selected{% endif %}>Delete</option>
+                    <option value="login" {% if action_filter == 'login' %}selected{% endif %}>Login</option>
+                    <option value="logout" {% if action_filter == 'logout' %}selected{% endif %}>Logout</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Audit Logs Table -->
+<div class="card">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">Riwayat Aktivitas</h6>
+    </div>
+    <div class="card-body">
+        {% if logs.items %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Waktu</th>
+                        <th>User</th>
+                        <th>Aksi</th>
+                        <th>Tabel</th>
+                        <th>Record ID</th>
+                        <th>IP Address</th>
+                        <th>Detail</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs.items %}
+                    <tr>
+                        <td>{{ log.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                        <td>
+                            {% if log.user %}
+                            {{ log.user.username }}
+                            {% else %}
+                            <span class="text-muted">System</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if log.action == 'create' %}
+                            <span class="badge bg-success">CREATE</span>
+                            {% elif log.action == 'update' %}
+                            <span class="badge bg-warning">UPDATE</span>
+                            {% elif log.action == 'delete' %}
+                            <span class="badge bg-danger">DELETE</span>
+                            {% elif log.action == 'login' %}
+                            <span class="badge bg-info">LOGIN</span>
+                            {% elif log.action == 'logout' %}
+                            <span class="badge bg-secondary">LOGOUT</span>
+                            {% else %}
+                            <span class="badge bg-primary">{{ log.action.upper() }}</span>
+                            {% endif %}
+                        </td>
+                        <td><code>{{ log.table_name }}</code></td>
+                        <td>{{ log.record_id or '-' }}</td>
+                        <td>{{ log.ip_address or '-' }}</td>
+                        <td>
+                            {% if log.old_values or log.new_values %}
+                            <button type="button" class="btn btn-sm btn-outline-info" 
+                                    onclick="showLogDetails({{ log.id }})" title="Lihat Detail">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if logs.pages > 1 %}
+        <nav aria-label="Audit logs pagination">
+            <ul class="pagination justify-content-center">
+                {% if logs.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.audit_logs', page=logs.prev_num, action=action_filter) }}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for page_num in logs.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != logs.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin.audit_logs', page=page_num, action=action_filter) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if logs.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.audit_logs', page=logs.next_num, action=action_filter) }}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-4">
+            <i class="bi bi-clock-history display-1 text-muted"></i>
+            <p class="text-muted mt-3">Belum ada log audit.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Log Details Modal -->
+<div class="modal fade" id="logDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detail Log Audit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="logDetailsContent">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showLogDetails(logId) {
+    var modal = new bootstrap.Modal(document.getElementById('logDetailsModal'));
+    var contentDiv = document.getElementById('logDetailsContent');
+    
+    // Show loading
+    contentDiv.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+    
+    // Fetch log details (this would need an API endpoint)
+    // For now, show a placeholder
+    setTimeout(function() {
+        contentDiv.innerHTML = `
+            <div class="alert alert-info">
+                <h6>Log ID: ${logId}</h6>
+                <p>Detail lengkap log audit akan ditampilkan di sini.</p>
+                <p><small class="text-muted">Fitur ini memerlukan endpoint API tambahan untuk mengambil detail log.</small></p>
+            </div>
+        `;
+    }, 500);
+}
+</script>
+{% endblock %}

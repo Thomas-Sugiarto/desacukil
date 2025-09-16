@@ -1,0 +1,156 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ content.title }} - {{ site_settings.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('public.index') }}">Beranda</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('public.category_content', slug=content.category.slug) }}">{{ content.category.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ content.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Content Detail -->
+            <article class="content-detail">
+                <header class="mb-4">
+                    <h1 class="display-5 fw-bold mb-3">{{ content.title }}</h1>
+                    <div class="content-meta text-muted mb-3">
+                        <span class="me-3">
+                            <i class="bi bi-calendar3"></i>
+                            {{ content.published_at.strftime('%d %B %Y') if content.published_at else content.created_at.strftime('%d %B %Y') }}
+                        </span>
+                        <span class="me-3">
+                            <i class="bi bi-folder"></i>
+                            <a href="{{ url_for('public.category_content', slug=content.category.slug) }}" class="text-decoration-none">
+                                {{ content.category.name }}
+                            </a>
+                        </span>
+                        <span class="me-3">
+                            <i class="bi bi-eye"></i>
+                            {{ content.view_count }} views
+                        </span>
+                        {% if content.author %}
+                        <span>
+                            <i class="bi bi-person"></i>
+                            {{ content.author.full_name or content.author.username }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </header>
+
+                <!-- Cover Image -->
+                {% if content.cover_image %}
+                <div class="featured-image mb-4">
+                    <img src="{{ get_file_url(content.cover_image) }}" alt="{{ content.title }}" class="img-fluid rounded">
+                </div>
+                {% endif %}
+
+                <!-- YouTube Video -->
+                {% if content.youtube_url %}
+                <div class="youtube-video mb-4">
+                    <div class="ratio ratio-16x9">
+                        <iframe src="{{ get_youtube_embed_url(content.youtube_url) }}" 
+                                title="{{ content.title }}" 
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if content.excerpt %}
+                <div class="content-excerpt mb-4">
+                    <p class="lead">{{ content.excerpt }}</p>
+                </div>
+                {% endif %}
+
+                <div class="content-body">
+                    {{ content.content | safe }}
+                </div>
+
+                <!-- Share buttons -->
+                <div class="share-section mt-5 pt-4 border-top">
+                    <h6 class="mb-3">Bagikan artikel ini:</h6>
+                    <div class="share-buttons">
+                        <button class="btn btn-outline-primary btn-sm share-btn me-2" data-platform="facebook">
+                            <i class="bi bi-facebook"></i> Facebook
+                        </button>
+                        <button class="btn btn-outline-info btn-sm share-btn me-2" data-platform="twitter">
+                            <i class="bi bi-twitter"></i> Twitter
+                        </button>
+                        <button class="btn btn-outline-success btn-sm share-btn me-2" data-platform="whatsapp">
+                            <i class="bi bi-whatsapp"></i> WhatsApp
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm print-btn">
+                            <i class="bi bi-printer"></i> Print
+                        </button>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Related Content -->
+            {% if related_content %}
+            <div class="related-content">
+                <h5 class="mb-3">Artikel Terkait</h5>
+                {% for item in related_content %}
+                <div class="card mb-3">
+                    {% if item.cover_image %}
+                    <img src="{{ get_file_url(item.cover_image) }}" class="card-img-top" alt="{{ item.title }}" style="height: 150px; object-fit: cover;">
+                    {% elif item.youtube_url %}
+                    <div class="card-img-top position-relative" style="height: 150px;">
+                        <iframe src="{{ get_youtube_embed_url(item.youtube_url) }}" 
+                                class="w-100 h-100" 
+                                frameborder="0" 
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <a href="{{ url_for('public.content_detail', slug=item.slug) }}" class="text-decoration-none">
+                                {{ item.title }}
+                            </a>
+                        </h6>
+                        {% if item.excerpt %}
+                        <p class="card-text small text-muted">{{ item.excerpt[:100] }}...</p>
+                        {% endif %}
+                        <small class="text-muted">
+                            <i class="bi bi-calendar3"></i>
+                            {{ item.published_at.strftime('%d %b %Y') if item.published_at else item.created_at.strftime('%d %b %Y') }}
+                        </small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Categories -->
+            <div class="categories-widget mt-4">
+                <h5 class="mb-3">Kategori</h5>
+                <div class="list-group">
+                    {% for category in nav_categories %}
+                    <a href="{{ url_for('public.category_content', slug=category.slug) }}" 
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        {{ category.name }}
+                        <span class="badge bg-primary rounded-pill">{{ category.content.count() }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Make site_settings available to JavaScript
+    window.site_settings = {{ site_settings | tojson }};
+</script>
+{% endblock %}
