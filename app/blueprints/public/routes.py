@@ -3,7 +3,7 @@ from app.blueprints.public import bp
 from app.blueprints.public.forms import ContactForm, SearchForm
 from app.models.content import Content, Category
 from app.models.setting import Setting
-from app.core.email import send_contact_email
+from app.core.email import send_contact_email, send_auto_reply_email
 from app import db
 from sqlalchemy import or_
 
@@ -135,23 +135,34 @@ def contact():
     
     if form.validate_on_submit():
         try:
-            # Send email using the contact form data
-            success = send_contact_email(
+            # Send email to admin using the contact form data
+            admin_success = send_contact_email(
                 name=form.name.data,
                 email=form.email.data,
                 subject=form.subject.data,
-                message=form.message.data
+                message=form.message.data,
+                phone=form.phone.data if hasattr(form, 'phone') and form.phone.data else None
             )
             
-            if success:
-                flash('Terima kasih! Pesan Anda telah dikirim. Kami akan merespons segera.', 'success')
-                current_app.logger.info(f'Contact form submitted by {form.name.data} ({form.email.data})')
+            # Send auto-reply to user
+            user_success = send_auto_reply_email(
+                name=form.name.data,
+                email=form.email.data,
+                subject=form.subject.data
+            )
+            
+            if admin_success:
+                flash('✅ Terima kasih! Pesan Anda telah berhasil dikirim. Kami akan merespons segera.', 'success')
+                current_app.logger.info(f'Contact form submitted by {form.name.data} ({form.email.data}) - Admin email: {"✅" if admin_success else "❌"}, Auto-reply: {"✅" if user_success else "❌"}')
+                
+                if not user_success:
+                    current_app.logger.warning(f'Auto-reply failed for {form.email.data}')
             else:
-                flash('Maaf, terjadi kesalahan saat mengirim pesan. Silakan coba lagi nanti.', 'error')
+                flash('❌ Maaf, terjadi kesalahan saat mengirim pesan. Silakan coba lagi nanti atau hubungi kami langsung.', 'error')
                 current_app.logger.error(f'Failed to send contact form from {form.name.data} ({form.email.data})')
                 
         except Exception as e:
-            flash('Maaf, terjadi kesalahan saat mengirim pesan. Silakan coba lagi nanti.', 'error')
+            flash('❌ Maaf, terjadi kesalahan sistem. Silakan coba lagi nanti atau hubungi kami langsung.', 'error')
             current_app.logger.error(f'Contact form error: {str(e)}')
         
         return redirect(url_for('public.contact'))
