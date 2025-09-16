@@ -50,6 +50,12 @@
                 </ul>
                 
                 <ul class="navbar-nav">
+                    <li class="nav-item d-flex align-items-center me-3">
+                        <img src="{{ url_for('static', filename='images/logoUKSW.png') }}" 
+                            alt="Logo 1" height="30" class="me-2">
+                        <img src="{{ url_for('static', filename='images/logoKemendikti.png') }}" 
+                            alt="Logo 2" height="30">
+                    </li>
                     {% if current_user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
@@ -110,7 +116,7 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
+<!-- Footer -->
 <footer class="bg-dark text-light py-4 mt-5">
     <div class="container">
         <div class="row">
@@ -118,7 +124,7 @@
                 <h5>{{ site_settings.site_name or 'Portal Desa Digital' }}</h5>
                 <p class="text">{{ site_settings.site_description or 'Sistem Informasi dan Layanan Desa' }}</p>
             </div>
-           <div class="col-md-6 text-md-end">
+            <div class="col-md-6 text-md-end">
                 <h6>Kontak</h6>
                 <div class="d-flex gap-3 justify-content-md-end flex-wrap">
                     <!-- Email -->
@@ -139,12 +145,26 @@
                 </div>
             </div>
         </div>
+
         <hr class="my-3">
+
+        <!-- Dipersembahkan Oleh -->
+        <div class="text-center mb-3">
+            <h6 class="fw-bold mb-2">Dipersembahkan Oleh</h6>
+            <div class="d-flex justify-content-center align-items-center gap-4">
+                <img src="{{ url_for('static', filename='images/logoUKSW.png') }}" 
+                     alt="Logo 1" height="80" class="bg-white p-2 rounded shadow">
+                <img src="{{ url_for('static', filename='images/logoKemendikti.png') }}" 
+                     alt="Logo 2" height="80" class="bg-white p-2 rounded shadow">
+            </div>
+        </div>
+
         <div class="text-center">
-            <small> {{ site_settings.site_name or 'Portal Desa Digital' }}.</small>
+            <small>{{ site_settings.site_name or 'Portal Desa Digital' }}.</small>
         </div>
     </div>
 </footer>
+
 
 
     <!-- Bootstrap JS -->
